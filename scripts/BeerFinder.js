@@ -4,6 +4,8 @@ import {
   SEARCH_FORM_ICON,
   SEARCH_FORM_PLACEHOLDER,
   SEARCH_VALID_LENGTH,
+  BASE_URL,
+  BASE_SEARCH_PARAM,
 } from "./constants.js";
 
 export class BeerFinder {
@@ -75,6 +77,10 @@ export class BeerFinder {
       return;
     }
     input.classList.remove("bordered--red");
+
+    this.fetchData(input.value)
+      .then((data) => console.log(data))
+      .catch((error) => console.error(error));
   }
 
   onSerchButton(event) {
@@ -87,9 +93,24 @@ export class BeerFinder {
       return;
     }
     input.classList.remove("bordered--red");
+
+    this.fetchData(input.value)
+      .then((data) => console.log(data))
+      .catch((error) => console.error(error));
   }
 
   validationLength(length) {
     return length >= SEARCH_VALID_LENGTH;
+  }
+
+  fetchData(param) {
+    return fetch(`${BASE_URL}/v2/beers?${BASE_SEARCH_PARAM}=${param}`).then(
+      (response) => {
+        if (!response.ok) {
+          throw new Error(response.status);
+        }
+        return response.json();
+      }
+    );
   }
 }

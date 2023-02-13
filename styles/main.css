@@ -57,8 +57,10 @@
 }
 .search__input {
   padding: 5px;
-  font-size: 16px;
   padding-right: 31px;
+  font-size: 16px;
+  font-weight: 700;
+  border: 1px solid black;
   outline: 1px solid black;
 }
 .search__button {
