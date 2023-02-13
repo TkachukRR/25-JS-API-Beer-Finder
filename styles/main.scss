@@ -12,6 +12,8 @@
   width: 1200px;
 }
 
-.header__title {
-  text-align: center;
-}/*# sourceMappingURL=main.css.map */
+.header {
+  &__title {
+    text-align: center;
+  }
+}
