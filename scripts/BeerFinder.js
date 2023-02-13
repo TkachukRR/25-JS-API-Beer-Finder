@@ -1,8 +1,8 @@
 import {
   APP_NAME,
   HEADER_BTN_FAVOURITES,
-  SERCH_FORM_ICON,
-  SERCH_FORM_PLACEHOLDER,
+  SEARCH_FORM_ICON,
+  SEARCH_FORM_PLACEHOLDER,
 } from "./constants.js";
 
 export class BeerFinder {
@@ -13,6 +13,7 @@ export class BeerFinder {
     this.#appTag = document.querySelector("#beerFinder");
 
     this.renderHeader();
+    this.addSerachFormListeners();
   }
 
   renderHeader() {
@@ -43,9 +44,9 @@ export class BeerFinder {
     return `
      <form class="search">
         <label class="search__lable">
-            <input type="text" name="search" class="search__input" placeholder="${SERCH_FORM_PLACEHOLDER}"/>
+            <input type="text" name="search" class="search__input" placeholder="${SEARCH_FORM_PLACEHOLDER}"/>
         </label>
-        <button type="submit" class="search__button" >${SERCH_FORM_ICON}</button>
+        <button type="submit" class="search__button" >${SEARCH_FORM_ICON}</button>
         <ul class="search__list">
             ${this.makeListItemsMarkupFromArray(this.#lastSearches)}
         </ul>
@@ -55,5 +56,21 @@ export class BeerFinder {
 
   makeListItemsMarkupFromArray(array) {
     return array.map((item) => `<li>${item}</li>`).join("");
+  }
+
+  addSerachFormListeners() {
+    const searchForm = this.#appTag.querySelector(".search");
+
+    searchForm.addEventListener("input", this.onInputChange.bind(this));
+    searchForm.addEventListener("click", this.onSerchButton.bind(this));
+  }
+
+  onInputChange(event) {
+    if (event.target.nodeName !== "INPUT") return;
+  }
+
+  onSerchButton(event) {
+    if (event.target.nodeName !== "BUTTON") return;
+    event.preventDefault();
   }
 }
