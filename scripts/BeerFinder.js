@@ -7,7 +7,7 @@ import {
 
 export class BeerFinder {
   #appTag;
-  #lastSearches = ["1", "2", "3"];
+  #lastSearches = [];
 
   constructor() {
     this.#appTag = document.querySelector("#beerFinder");
