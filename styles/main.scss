@@ -13,8 +13,10 @@
 }
 
 .header {
+  position: relative;
   &__title {
     text-align: center;
+    margin-bottom: 15px;
   }
 }
 
@@ -54,11 +56,17 @@
 
 .button {
   &__favourites {
-    float: right;
+    position: absolute;
+    right: 0;
   }
 }
 
 .search {
+  display: inline-block;
+  position: relative;
+  transform: translatex(-50%);
+  left: 50%;
+  margin-bottom: 15px;
   &__input {
     padding: 5px;
     font-size: 16px;
@@ -67,7 +75,7 @@
   }
 
   &__button {
-    position: relative;
+    position: absolute;
     line-height: 16px;
     font-size: 16px;
     height: 26px;
@@ -75,7 +83,8 @@
     border: none;
     outline: none;
     background-color: transparent;
-    right: 31px;
+    right: 5px;
+    top: 2.5px;
   }
 
   &__list {

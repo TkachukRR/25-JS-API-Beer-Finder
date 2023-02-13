@@ -12,8 +12,12 @@
   width: 1200px;
 }
 
+.header {
+  position: relative;
+}
 .header__title {
   text-align: center;
+  margin-bottom: 15px;
 }
 
 .btn {
@@ -40,9 +44,17 @@
 }
 
 .button__favourites {
-  float: right;
+  position: absolute;
+  right: 0;
 }
 
+.search {
+  display: inline-block;
+  position: relative;
+  transform: translatex(-50%);
+  left: 50%;
+  margin-bottom: 15px;
+}
 .search__input {
   padding: 5px;
   font-size: 16px;
@@ -50,7 +62,7 @@
   outline: 1px solid black;
 }
 .search__button {
-  position: relative;
+  position: absolute;
   line-height: 16px;
   font-size: 16px;
   height: 26px;
@@ -58,7 +70,8 @@
   border: none;
   outline: none;
   background-color: transparent;
-  right: 31px;
+  right: 5px;
+  top: 2.5px;
 }
 .search__list {
   list-style: none;
