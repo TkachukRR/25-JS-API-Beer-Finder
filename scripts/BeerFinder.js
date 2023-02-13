@@ -1,0 +1,3 @@
+export class BeerFinder {
+  constructor() {}
+}
