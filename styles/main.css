@@ -8,7 +8,7 @@
 
 .containter {
   margin: 0 auto;
-  padding: 1em;
+  padding: 20px;
   width: 1200px;
 }
 
@@ -41,4 +41,28 @@
 
 .button__favourites {
   float: right;
+}
+
+.search__input {
+  padding: 5px;
+  font-size: 16px;
+  padding-right: 31px;
+}
+.search__button {
+  position: relative;
+  line-height: 16px;
+  font-size: 16px;
+  height: 26px;
+  width: 26px;
+  border: none;
+  outline: none;
+  background-color: transparent;
+  right: 31px;
+}
+.search__list {
+  list-style: none;
+  display: flex;
+}
+.search__list li:not(:last-child) {
+  margin-right: 10px;
 }/*# sourceMappingURL=main.css.map */
