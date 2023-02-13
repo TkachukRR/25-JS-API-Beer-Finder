@@ -3,6 +3,7 @@ import {
   HEADER_BTN_FAVOURITES,
   SEARCH_FORM_ICON,
   SEARCH_FORM_PLACEHOLDER,
+  SEARCH_VALID_LENGTH,
 } from "./constants.js";
 
 export class BeerFinder {
@@ -67,10 +68,28 @@ export class BeerFinder {
 
   onInputChange(event) {
     if (event.target.nodeName !== "INPUT") return;
+    const input = this.#appTag.querySelector("input.search__input");
+    const isInvalid = !this.validationLength(input.value.length);
+    if (isInvalid) {
+      input.classList.add("bordered--red");
+      return;
+    }
+    input.classList.remove("bordered--red");
   }
 
   onSerchButton(event) {
     if (event.target.nodeName !== "BUTTON") return;
     event.preventDefault();
+    const input = this.#appTag.querySelector("input.search__input");
+    const isInvalid = !this.validationLength(input.value.length);
+    if (isInvalid) {
+      input.classList.add("bordered--red");
+      return;
+    }
+    input.classList.remove("bordered--red");
+  }
+
+  validationLength(length) {
+    return length >= SEARCH_VALID_LENGTH;
   }
 }
