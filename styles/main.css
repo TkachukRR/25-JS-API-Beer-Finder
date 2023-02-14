@@ -133,4 +133,11 @@
 .navigation__top {
   min-width: auto;
   padding: 10px;
+}
+
+.hidden {
+  height: 0;
+  margin: 0;
+  padding: 0;
+  visibility: hidden;
 }/*# sourceMappingURL=main.css.map */

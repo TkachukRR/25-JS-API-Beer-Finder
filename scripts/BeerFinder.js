@@ -15,6 +15,7 @@ import {
 export class BeerFinder {
   #appTag;
   #lastSearches = [];
+  #pageNumber = 1;
 
   constructor() {
     this.#appTag = document.querySelector("#beerFinder");
@@ -79,21 +80,22 @@ export class BeerFinder {
     if (event.target.nodeName !== "INPUT") return;
     const input = this.#appTag.querySelector("input.search__input");
     const isInvalid = !this.validationLength(input.value.length);
-    let pageNumber = 1;
+
     if (isInvalid) {
       input.classList.add("bordered--red");
       return;
     }
     input.classList.remove("bordered--red");
 
-    this.fetchData(input.value, pageNumber)
+    this.fetchData(input.value)
       .then((data) => {
         if (data.length) {
           this.addLastSearches(input.value);
           this.reranderSearchList();
         }
         this.renderMainInnerMarkup(data);
-        this.addMainListeners();
+        this.addMainListeners(data);
+        this.setNaviTopBtnVisibility();
       })
       .catch((error) => console.error(error));
   }
@@ -125,9 +127,11 @@ export class BeerFinder {
     return length >= SEARCH_VALID_LENGTH;
   }
 
-  fetchData(param, pageNumber = "1") {
+  fetchData(param) {
     return fetch(
-      `${BASE_URL}/v2/beers?page=${pageNumber}&per_page=${PRODUCT_PER_PAGE}&${BASE_SEARCH_PARAM}=${param}`
+      `${BASE_URL}/v2/beers?page=${
+        this.#pageNumber
+      }&per_page=${PRODUCT_PER_PAGE}&${BASE_SEARCH_PARAM}=${param}`
     ).then((response) => {
       if (!response.ok) {
         throw new Error(response.status);
@@ -235,9 +239,40 @@ export class BeerFinder {
 
   onNaviNextBtn(event) {
     if (!event.target.classList.contains("navigation__next")) return;
+    this.setPageNumber(this.getPageNumber() + 1);
+
+    const input = this.#appTag.querySelector("input.search__input");
+    this.fetchData(input.value)
+      .then((data) => {
+        this.addProductsItems(data);
+        this.setNaviTopBtnVisibility();
+      })
+      .catch((error) => console.error(error));
   }
 
   onNaviToptBtn(event) {
     if (!event.target.classList.contains("navigation__top")) return;
+  }
+
+  getPageNumber() {
+    return this.#pageNumber;
+  }
+
+  setPageNumber(newNumber) {
+    this.#pageNumber = newNumber;
+  }
+
+  addProductsItems(data) {
+    const products = this.#appTag.querySelector(".product__list");
+    const newItems = this.makeProductItemMarkup(data);
+
+    products.insertAdjacentHTML("beforeend", newItems);
+  }
+
+  setNaviTopBtnVisibility() {
+    const naviTopBtn = this.#appTag.querySelector(".navigation__top");
+
+    if (this.#pageNumber === 1) naviTopBtn.classList.add("hidden");
+    if (this.#pageNumber > 1) naviTopBtn.classList.remove("hidden");
   }
 }
