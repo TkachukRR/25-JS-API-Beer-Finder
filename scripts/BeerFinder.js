@@ -81,13 +81,10 @@ export class BeerFinder {
       return;
     }
     input.classList.remove("bordered--red");
-    console.log(input.value);
 
     this.fetchData(input.value)
       .then((data) => {
-        if (data !== []) {
-          console.log(input.value);
-          console.log(data);
+        if (data.length) {
           this.addLastSearches(input.value);
           this.reranderSearchList();
         }
@@ -109,7 +106,7 @@ export class BeerFinder {
 
     this.fetchData(input.value)
       .then((data) => {
-        if (data) {
+        if (data.length) {
           this.addLastSearches(input.value);
           this.reranderSearchList();
         }
