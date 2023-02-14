@@ -74,6 +74,7 @@
     font-weight: 700;
     border: 1px solid black;
     outline: 1px solid black;
+    border-radius: 4px;
   }
 
   &__button {
@@ -103,5 +104,46 @@
   &--red {
     border: 1px solid red;
     outline: 1px solid red;
+  }
+}
+
+.product {
+  &__list {
+    list-style: none;
+
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  &__item {
+    display: flex;
+
+    margin: 15px;
+    padding: 15px;
+    flex-basis: calc((100% - 2 * 30px) / 2);
+
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.12), 0px 1px 1px rgba(0, 0, 0, 0.14),
+      0px 2px 1px rgba(0, 0, 0, 0.2);
+    border-radius: 0px 0px 4px 4px;
+  }
+
+  &__image {
+    display: block;
+
+    margin-right: 15px;
+  }
+
+  &__title {
+    margin-bottom: 10px;
+    font-weight: 700;
+
+    & span {
+      color: rgb(87, 87, 87);
+      font-weight: 500;
+    }
+  }
+
+  &__brewed {
+    margin-bottom: 10px;
   }
 }

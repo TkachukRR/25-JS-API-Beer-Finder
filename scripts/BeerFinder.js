@@ -6,6 +6,7 @@ import {
   SEARCH_VALID_LENGTH,
   BASE_URL,
   BASE_SEARCH_PARAM,
+  ERROR_MSG,
 } from "./constants.js";
 
 export class BeerFinder {
@@ -21,8 +22,10 @@ export class BeerFinder {
 
   renderHeader() {
     const headeMarkup = this.makeHeaderMarkup();
+    const mainTag = this.makeMainMarkup();
 
     this.#appTag.insertAdjacentHTML("beforeend", headeMarkup);
+    this.#appTag.insertAdjacentHTML("beforeend", mainTag);
   }
 
   makeHeaderMarkup() {
@@ -79,7 +82,10 @@ export class BeerFinder {
     input.classList.remove("bordered--red");
 
     this.fetchData(input.value)
-      .then((data) => console.log(data))
+      .then((data) => {
+        console.log(data);
+        this.renderMainInnerMurkup(data);
+      })
       .catch((error) => console.error(error));
   }
 
@@ -95,7 +101,10 @@ export class BeerFinder {
     input.classList.remove("bordered--red");
 
     this.fetchData(input.value)
-      .then((data) => console.log(data))
+      .then((data) => {
+        console.log(data);
+        this.renderMainInnerMurkup(data);
+      })
       .catch((error) => console.error(error));
   }
 
@@ -112,5 +121,47 @@ export class BeerFinder {
         return response.json();
       }
     );
+  }
+
+  makeMainMarkup(innerMarup = "") {
+    return `<main class="main">${innerMarup}</main>`;
+  }
+
+  makeProductsMarkup(productItemsMarkup) {
+    if (!productItemsMarkup) {
+      return `<p class="error__products">${ERROR_MSG}</p>`;
+    }
+
+    return `
+      <h2>Serching resault:</h2>
+      <ul class="product__list">
+        ${productItemsMarkup}
+      </ul>`;
+  }
+
+  makeProductItemMarkup(products) {
+    return products
+      .map(
+        (prod) => `
+      <li class="product__item">
+        <img class="product__image" src="${prod.image_url}" alt="${prod.name}" width="50px"/>
+        <div class="product__content">
+          <h3 class="product__title">${prod.name} - <span>${prod.tagline}</span></h3>
+          <p class="product__brewed">First brewed: ${prod.first_brewed}</p>
+          <p class="product__desc"> ${prod.description}</p>
+        </div>
+      </li>`
+      )
+      .join("");
+  }
+
+  renderMainInnerMurkup(products) {
+    const mainTag = this.#appTag.querySelector(".main");
+
+    const innerMarkup = this.makeProductsMarkup(
+      this.makeProductItemMarkup(products)
+    );
+
+    mainTag.innerHTML = innerMarkup;
   }
 }
