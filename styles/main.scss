@@ -147,3 +147,11 @@
     margin-bottom: 10px;
   }
 }
+
+.error {
+  &__products {
+    text-align: center;
+    font-size: 20px;
+    color: red;
+  }
+}

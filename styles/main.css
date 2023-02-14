@@ -116,4 +116,10 @@
 }
 .product__brewed {
   margin-bottom: 10px;
+}
+
+.error__products {
+  text-align: center;
+  font-size: 20px;
+  color: red;
 }/*# sourceMappingURL=main.css.map */

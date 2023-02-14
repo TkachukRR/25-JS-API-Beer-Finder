@@ -66,8 +66,9 @@ export class BeerFinder {
 
   addSerachFormListeners() {
     const searchForm = this.#appTag.querySelector(".search");
+    const onInputChangeDebounced = this.debounce(this.onInputChange, 250);
 
-    searchForm.addEventListener("input", this.onInputChange.bind(this));
+    searchForm.addEventListener("input", onInputChangeDebounced.bind(this));
     searchForm.addEventListener("click", this.onSerchButton.bind(this));
   }
 
@@ -80,10 +81,16 @@ export class BeerFinder {
       return;
     }
     input.classList.remove("bordered--red");
+    console.log(input.value);
 
     this.fetchData(input.value)
       .then((data) => {
-        console.log(data);
+        if (data !== []) {
+          console.log(input.value);
+          console.log(data);
+          this.addLastSearches(input.value);
+          this.reranderSearchList();
+        }
         this.renderMainInnerMurkup(data);
       })
       .catch((error) => console.error(error));
@@ -102,7 +109,11 @@ export class BeerFinder {
 
     this.fetchData(input.value)
       .then((data) => {
-        console.log(data);
+        if (data) {
+          this.addLastSearches(input.value);
+          this.reranderSearchList();
+        }
+
         this.renderMainInnerMurkup(data);
       })
       .catch((error) => console.error(error));
@@ -144,9 +155,13 @@ export class BeerFinder {
       .map(
         (prod) => `
       <li class="product__item">
-        <img class="product__image" src="${prod.image_url}" alt="${prod.name}" width="50px"/>
+        <img class="product__image" src="${
+          prod.image_url === null ? "./bottle.jpg" : prod.image_url
+        } " alt="${prod.name}" width="50px"/>
         <div class="product__content">
-          <h3 class="product__title">${prod.name} - <span>${prod.tagline}</span></h3>
+          <h3 class="product__title">${prod.name} - <span>${
+          prod.tagline
+        }</span></h3>
           <p class="product__brewed">First brewed: ${prod.first_brewed}</p>
           <p class="product__desc"> ${prod.description}</p>
         </div>
@@ -157,11 +172,41 @@ export class BeerFinder {
 
   renderMainInnerMurkup(products) {
     const mainTag = this.#appTag.querySelector(".main");
-
     const innerMarkup = this.makeProductsMarkup(
       this.makeProductItemMarkup(products)
     );
 
     mainTag.innerHTML = innerMarkup;
+  }
+
+  getLastSearches() {
+    return this.#lastSearches;
+  }
+
+  addLastSearches(lastSearch) {
+    this.#lastSearches = [...this.#lastSearches, lastSearch];
+  }
+
+  reranderSearchList() {
+    const searchList = this.#appTag.querySelector(".search__list");
+    const innerMarkup = this.makeListItemsMarkupFromArray(
+      this.getLastSearches()
+    );
+
+    searchList.innerHTML = innerMarkup;
+  }
+
+  debounce(func, msDelay) {
+    let timeout;
+
+    return function () {
+      const fnCall = () => {
+        func.apply(this, arguments);
+      };
+
+      clearTimeout(timeout);
+
+      timeout = setTimeout(fnCall, msDelay);
+    };
   }
 }
