@@ -7,6 +7,7 @@ import {
   BASE_URL,
   BASE_SEARCH_PARAM,
   ERROR_MSG,
+  NAVI_BTN_NEXT_NAME,
 } from "./constants.js";
 
 export class BeerFinder {
@@ -88,7 +89,7 @@ export class BeerFinder {
           this.addLastSearches(input.value);
           this.reranderSearchList();
         }
-        this.renderMainInnerMurkup(data);
+        this.renderMainInnerMarkup(data);
       })
       .catch((error) => console.error(error));
   }
@@ -111,7 +112,7 @@ export class BeerFinder {
           this.reranderSearchList();
         }
 
-        this.renderMainInnerMurkup(data);
+        this.renderMainInnerMarkup(data);
       })
       .catch((error) => console.error(error));
   }
@@ -167,7 +168,7 @@ export class BeerFinder {
       .join("");
   }
 
-  renderMainInnerMurkup(products) {
+  renderMainInnerMarkup(products) {
     const mainTag = this.#appTag.querySelector(".main");
     const innerMarkup = this.makeProductsMarkup(
       this.makeProductItemMarkup(products)
@@ -205,5 +206,13 @@ export class BeerFinder {
 
       timeout = setTimeout(fnCall, msDelay);
     };
+  }
+
+  makeNavigationMurkup() {
+    return `
+    <nav class="navigation">
+      <button type="button" class="btn button__next}">${NAVI_BTN_NEXT_NAME}</button>
+    </nav>
+    `;
   }
 }
