@@ -9,6 +9,7 @@ import {
   ERROR_MSG,
   NAVI_BTN_NEXT_NAME,
   PRODUCT_PER_PAGE,
+  NAVI_BTN_TOP_NAME,
 } from "./constants.js";
 
 export class BeerFinder {
@@ -174,8 +175,10 @@ export class BeerFinder {
     const innerMarkup = this.makeProductsMarkup(
       this.makeProductItemMarkup(products)
     );
+    const navigation = this.makeNavigationMurkup();
 
     mainTag.innerHTML = innerMarkup;
+    mainTag.insertAdjacentHTML("beforeend", navigation);
   }
 
   getLastSearches() {
@@ -212,7 +215,8 @@ export class BeerFinder {
   makeNavigationMurkup() {
     return `
     <nav class="navigation">
-      <button type="button" class="btn button__next}">${NAVI_BTN_NEXT_NAME}</button>
+      <button type="button" class="btn navigation__next">${NAVI_BTN_NEXT_NAME}</button>
+      <button type="button" class="btn navigation__top">${NAVI_BTN_TOP_NAME}</button>
     </nav>
     `;
   }

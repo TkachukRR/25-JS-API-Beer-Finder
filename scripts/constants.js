@@ -9,3 +9,4 @@ export const ERROR_MSG =
   "There were no properties found forthe given location.";
 export const NAVI_BTN_NEXT_NAME = "load more";
 export const PRODUCT_PER_PAGE = 4;
+export const NAVI_BTN_TOP_NAME = "&#129145";
