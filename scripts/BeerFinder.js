@@ -79,19 +79,21 @@ export class BeerFinder {
     if (event.target.nodeName !== "INPUT") return;
     const input = this.#appTag.querySelector("input.search__input");
     const isInvalid = !this.validationLength(input.value.length);
+    let pageNumber = 1;
     if (isInvalid) {
       input.classList.add("bordered--red");
       return;
     }
     input.classList.remove("bordered--red");
 
-    this.fetchData(input.value)
+    this.fetchData(input.value, pageNumber)
       .then((data) => {
         if (data.length) {
           this.addLastSearches(input.value);
           this.reranderSearchList();
         }
         this.renderMainInnerMarkup(data);
+        this.addMainListeners();
       })
       .catch((error) => console.error(error));
   }
@@ -175,9 +177,12 @@ export class BeerFinder {
     const innerMarkup = this.makeProductsMarkup(
       this.makeProductItemMarkup(products)
     );
+    mainTag.innerHTML = innerMarkup;
+
+    if (!products.length) return;
+
     const navigation = this.makeNavigationMurkup();
 
-    mainTag.innerHTML = innerMarkup;
     mainTag.insertAdjacentHTML("beforeend", navigation);
   }
 
@@ -219,5 +224,20 @@ export class BeerFinder {
       <button type="button" class="btn navigation__top">${NAVI_BTN_TOP_NAME}</button>
     </nav>
     `;
+  }
+
+  addMainListeners() {
+    const mainTag = this.#appTag.querySelector(".main");
+
+    mainTag.addEventListener("click", this.onNaviNextBtn.bind(this));
+    mainTag.addEventListener("click", this.onNaviToptBtn.bind(this));
+  }
+
+  onNaviNextBtn(event) {
+    if (!event.target.classList.contains("navigation__next")) return;
+  }
+
+  onNaviToptBtn(event) {
+    if (!event.target.classList.contains("navigation__top")) return;
   }
 }
