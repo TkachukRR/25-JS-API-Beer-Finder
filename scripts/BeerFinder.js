@@ -8,6 +8,7 @@ import {
   BASE_SEARCH_PARAM,
   ERROR_MSG,
   NAVI_BTN_NEXT_NAME,
+  PRODUCT_PER_PAGE,
 } from "./constants.js";
 
 export class BeerFinder {
@@ -121,15 +122,15 @@ export class BeerFinder {
     return length >= SEARCH_VALID_LENGTH;
   }
 
-  fetchData(param) {
-    return fetch(`${BASE_URL}/v2/beers?${BASE_SEARCH_PARAM}=${param}`).then(
-      (response) => {
-        if (!response.ok) {
-          throw new Error(response.status);
-        }
-        return response.json();
+  fetchData(param, pageNumber = "1") {
+    return fetch(
+      `${BASE_URL}/v2/beers?page=${pageNumber}&per_page=${PRODUCT_PER_PAGE}&${BASE_SEARCH_PARAM}=${param}`
+    ).then((response) => {
+      if (!response.ok) {
+        throw new Error(response.status);
       }
-    );
+      return response.json();
+    });
   }
 
   makeMainMarkup(innerMarup = "") {
