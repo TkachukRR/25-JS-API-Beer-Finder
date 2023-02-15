@@ -75,15 +75,22 @@ export class BeerFinder {
             <input type="text" name="search" class="search__input" placeholder="${SEARCH_FORM_PLACEHOLDER}"/>
         </label>
         <button type="submit" class="search__button" >${SEARCH_FORM_ICON}</button>
-        <ul class="search__list">
-            ${this.makeListItemsMarkupFromArray(this.#lastSearches)}
-        </ul>
-    </form>
+      </form>
+      <ul class="searches">
+          ${this.makeListItemsMarkupFromArray(this.#lastSearches)}
+      </ul>
     `;
   }
 
   makeListItemsMarkupFromArray(array) {
-    return array.map((item) => `<li>${item}</li>`).join("");
+    return array
+      .map(
+        (item) => `
+      <li class="searches__item">
+        <button type="button" class="btn searches__button">${item}</button>
+      </li>`
+      )
+      .join("");
   }
 
   addSerachFormListeners() {
@@ -223,7 +230,7 @@ export class BeerFinder {
   }
 
   reranderSearchList() {
-    const searchList = this.#appTag.querySelector(".search__list");
+    const searchList = this.#appTag.querySelector(".searches");
     const innerMarkup = this.makeListItemsMarkupFromArray(
       this.getLastSearches()
     );
