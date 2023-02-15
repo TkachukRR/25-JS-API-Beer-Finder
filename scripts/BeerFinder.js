@@ -31,7 +31,7 @@ export class BeerFinder {
       })
       .catch((error) => console.error(error));
 
-    this.addRendomProductItems(PRODUCT_PER_PAGE);
+    this.addRandomProductItems(PRODUCT_PER_PAGE);
     this.addMainListeners();
 
     const debouncedSetNaviTopBtnVisibility = this.debounce(
@@ -279,7 +279,7 @@ export class BeerFinder {
         this.controlNaviNextBtnByEpmtyNextData(input.value);
 
       case "Random products:":
-        this.addRendomProductItems(PRODUCT_PER_PAGE + 1);
+        this.addRandomProductItems(PRODUCT_PER_PAGE + 1);
     }
   }
 
@@ -322,7 +322,7 @@ export class BeerFinder {
     });
   }
 
-  addRendomProductItems(quantity) {
+  addRandomProductItems(quantity) {
     for (let i = 1; i < quantity; i++) {
       this.fetchRandomElement()
         .then((randomElement) => {
@@ -333,15 +333,15 @@ export class BeerFinder {
   }
 
   isElemInViewport(elem, full) {
-    var box = elem.getBoundingClientRect();
-    var top = box.top;
-    var left = box.left;
-    var bottom = box.bottom;
-    var right = box.right;
-    var width = document.documentElement.clientWidth;
-    var height = document.documentElement.clientHeight;
-    var maxWidth = 0;
-    var maxHeight = 0;
+    const box = elem.getBoundingClientRect();
+    const top = box.top;
+    const left = box.left;
+    const bottom = box.bottom;
+    const right = box.right;
+    const width = document.documentElement.clientWidth;
+    const height = document.documentElement.clientHeight;
+    let maxWidth = 0;
+    let maxHeight = 0;
     if (full) {
       maxWidth = right - left;
       maxHeight = bottom - top;
