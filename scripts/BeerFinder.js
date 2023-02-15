@@ -242,16 +242,8 @@ export class BeerFinder {
   reranderSearchList() {
     const searchList = this.#appTag.querySelector(".searches");
     let innerMarkup;
-    console.log(this.getLastSearches());
 
     if (this.getLastSearches().length > QUANTITY_SEARCHES_ITEMS) {
-      console.log(
-        this.getLastSearches().slice(
-          this.getLastSearches().length - QUANTITY_SEARCHES_ITEMS,
-          this.getLastSearches().length
-        )
-      );
-
       innerMarkup = this.makeListItemsMarkupFromArray(
         this.getLastSearches().slice(
           this.getLastSearches().length - QUANTITY_SEARCHES_ITEMS,
@@ -408,7 +400,6 @@ export class BeerFinder {
 
   onSearchesButton(event) {
     if (event.target.nodeName !== "BUTTON") return;
-    console.log(event.target.textContent);
 
     const input = this.#appTag.querySelector(".search__input");
 
