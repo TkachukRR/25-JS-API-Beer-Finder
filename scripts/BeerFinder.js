@@ -289,6 +289,7 @@ export class BeerFinder {
 
     mainTag.addEventListener("click", this.onNaviNextBtn.bind(this));
     mainTag.addEventListener("click", this.onNaviTopBtn.bind(this));
+    mainTag.addEventListener("click", this.onAddToFavoritesBtn.bind(this));
   }
 
   onNaviNextBtn(event) {
@@ -424,5 +425,14 @@ export class BeerFinder {
       })
       .catch((error) => console.error(error));
     this.controlNaviNextBtnVisibility(input.value);
+  }
+
+  onAddToFavoritesBtn(event) {
+    if (
+      event.target.nodeName !== "BUTTON" &&
+      !event.target.classList.contains("product__button")
+    ) {
+      return;
+    }
   }
 }
