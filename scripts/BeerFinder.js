@@ -27,7 +27,7 @@ export class BeerFinder {
       .then((randomElement) => {
         this.renderMainInnerMarkup(randomElement, "Random products");
 
-        this.setNaviTopBtnVisibility();
+        this.controlNaviTopBtnVisibility();
       })
       .catch((error) => console.error(error));
 
@@ -35,7 +35,7 @@ export class BeerFinder {
     this.addMainListeners();
 
     const debouncedSetNaviTopBtnVisibility = this.debounce(
-      this.setNaviTopBtnVisibility.bind(this),
+      this.controlNaviTopBtnVisibility.bind(this),
       100
     );
 
@@ -112,10 +112,10 @@ export class BeerFinder {
           this.reranderSearchList();
         }
         this.renderMainInnerMarkup(data);
-        this.addMainListeners(data);
-        this.setNaviTopBtnVisibility();
+        this.controlNaviTopBtnVisibility();
       })
       .catch((error) => console.error(error));
+    this.controlNaviNextBtnByEpmtyNextData(input.value);
   }
 
   onSerchButton(event) {
@@ -137,19 +137,19 @@ export class BeerFinder {
         }
 
         this.renderMainInnerMarkup(data);
+        this.controlNaviTopBtnVisibility();
       })
       .catch((error) => console.error(error));
+    this.controlNaviNextBtnByEpmtyNextData(input.value);
   }
 
   validationLength(length) {
     return length >= SEARCH_VALID_LENGTH;
   }
 
-  fetchData(param) {
+  fetchData(param, pageNumber = this.#pageNumber) {
     return fetch(
-      `${BASE_URL}/v2/beers?page=${
-        this.#pageNumber
-      }&per_page=${PRODUCT_PER_PAGE}&${BASE_SEARCH_PARAM}=${param}`
+      `${BASE_URL}/v2/beers?page=${pageNumber}&per_page=${PRODUCT_PER_PAGE}&${BASE_SEARCH_PARAM}=${param}`
     ).then((response) => {
       if (!response.ok) {
         throw new Error(response.status);
@@ -269,11 +269,14 @@ export class BeerFinder {
         this.setPageNumber(this.getPageNumber() + 1);
 
         const input = this.#appTag.querySelector("input.search__input");
+
         this.fetchData(input.value)
           .then((data) => {
             this.addProductsItems(data);
           })
           .catch((error) => console.error(error));
+
+        this.controlNaviNextBtnByEpmtyNextData(input.value);
 
       case "Random products:":
         this.addRendomProductItems(PRODUCT_PER_PAGE + 1);
@@ -299,11 +302,11 @@ export class BeerFinder {
     products.insertAdjacentHTML("beforeend", newItems);
   }
 
-  setNaviTopBtnVisibility() {
+  controlNaviTopBtnVisibility() {
     const naviTopBtn = this.#appTag.querySelector(".navigation__top");
     const filstProduct = this.#appTag.querySelector(".product__item");
 
-    this.isElemInViewport(filstProduct)
+    this.isElemInViewport(filstProduct, true)
       ? naviTopBtn.classList.add("hidden")
       : naviTopBtn.classList.remove("hidden");
   }
@@ -345,5 +348,17 @@ export class BeerFinder {
       Math.min(height, bottom) - Math.max(0, top) >= maxHeight &&
       Math.min(width, right) - Math.max(0, left) >= maxWidth
     );
+  }
+
+  controlNaviNextBtnByEpmtyNextData(param) {
+    this.fetchData(param, this.#pageNumber + 1)
+      .then((data) => {
+        if (data.length === 0) {
+          this.#appTag
+            .querySelector(".navigation__next")
+            .classList.add("hidden");
+        }
+      })
+      .catch((error) => console.error(error));
   }
 }
