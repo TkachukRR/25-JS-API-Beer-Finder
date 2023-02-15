@@ -285,6 +285,8 @@ export class BeerFinder {
 
   onNaviToptBtn(event) {
     if (!event.target.classList.contains("navigation__top")) return;
+    const firstProduct = this.#appTag.querySelector(".product__item");
+    this.sctorllToElement(firstProduct);
   }
 
   getPageNumber() {
@@ -360,5 +362,9 @@ export class BeerFinder {
         }
       })
       .catch((error) => console.error(error));
+  }
+
+  sctorllToElement(element) {
+    element.scrollIntoView();
   }
 }
