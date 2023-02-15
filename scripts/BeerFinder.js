@@ -22,7 +22,7 @@ export class BeerFinder {
     this.#appTag = document.querySelector("#beerFinder");
 
     this.renderHeader();
-    this.addSerachFormListeners();
+    this.addSearchFormListeners();
 
     this.fetchRandomElement()
       .then((randomElement) => {
@@ -56,7 +56,7 @@ export class BeerFinder {
     <header class="header">
         ${this.makeHeaderTitleMarkup()}
         ${this.makeButtonMarkup(HEADER_BTN_FAVOURITES)}
-        ${this.makeSearcFormhMarkup()}
+        ${this.makeSearchFormMarkup()}
     </header>
     `;
   }
@@ -69,7 +69,7 @@ export class BeerFinder {
     return `<button type="button" class="btn button__${btnName.toLowerCase()}">${btnName}</button>`;
   }
 
-  makeSearcFormhMarkup() {
+  makeSearchFormMarkup() {
     return `
      <form class="search">
         <label class="search__lable">
@@ -94,13 +94,13 @@ export class BeerFinder {
       .join("");
   }
 
-  addSerachFormListeners() {
+  addSearchFormListeners() {
     const searchForm = this.#appTag.querySelector(".search");
     const onInputChangeDebounced = this.debounce(this.onInputChange, 250);
     const searches = this.#appTag.querySelector(".searches");
 
     searchForm.addEventListener("input", onInputChangeDebounced.bind(this));
-    searchForm.addEventListener("click", this.onSerchButton.bind(this));
+    searchForm.addEventListener("click", this.onSearchButton.bind(this));
     searches.addEventListener("click", this.onSearchesButton.bind(this));
   }
 
@@ -119,16 +119,16 @@ export class BeerFinder {
       .then((data) => {
         if (data.length) {
           this.addLastSearches(input.value);
-          this.reranderSearchList();
+          this.rerenderSearchList();
         }
         this.renderMainInnerMarkup(data);
         this.controlNaviTopBtnVisibility();
       })
       .catch((error) => console.error(error));
-    this.controlNaviNextBtnByEpmtyNextData(input.value);
+    this.controlNaviNextBtnByEmptyNextData(input.value);
   }
 
-  onSerchButton(event) {
+  onSearchButton(event) {
     if (event.target.nodeName !== "BUTTON") return;
     event.preventDefault();
     const input = this.#appTag.querySelector("input.search__input");
@@ -143,14 +143,14 @@ export class BeerFinder {
       .then((data) => {
         if (data.length) {
           this.addLastSearches(input.value);
-          this.reranderSearchList();
+          this.rerenderSearchList();
         }
 
         this.renderMainInnerMarkup(data);
         this.controlNaviTopBtnVisibility();
       })
       .catch((error) => console.error(error));
-    this.controlNaviNextBtnByEpmtyNextData(input.value);
+    this.controlNaviNextBtnByEmptyNextData(input.value);
   }
 
   validationLength(length) {
@@ -168,8 +168,8 @@ export class BeerFinder {
     });
   }
 
-  makeMainMarkup(innerMarup = "") {
-    return `<main class="main">${innerMarup}</main>`;
+  makeMainMarkup(innerMarkup = "") {
+    return `<main class="main">${innerMarkup}</main>`;
   }
 
   makeProductsMarkup(productItemsMarkup, productsTitle = "") {
@@ -216,7 +216,7 @@ export class BeerFinder {
 
     if (!products.length) return;
 
-    const navigation = this.makeNavigationMurkup();
+    const navigation = this.makeNavigationMarkup();
 
     mainTag.insertAdjacentHTML("beforeend", navigation);
   }
@@ -239,7 +239,7 @@ export class BeerFinder {
     this.#lastSearches = [...filteredArray, lastSearch];
   }
 
-  reranderSearchList() {
+  rerenderSearchList() {
     const searchList = this.#appTag.querySelector(".searches");
     let innerMarkup;
 
@@ -272,7 +272,7 @@ export class BeerFinder {
     };
   }
 
-  makeNavigationMurkup() {
+  makeNavigationMarkup() {
     return `
     <nav class="navigation">
       <button type="button" class="btn navigation__next">${NAVI_BTN_NEXT_NAME}</button>
@@ -285,7 +285,7 @@ export class BeerFinder {
     const mainTag = this.#appTag.querySelector(".main");
 
     mainTag.addEventListener("click", this.onNaviNextBtn.bind(this));
-    mainTag.addEventListener("click", this.onNaviToptBtn.bind(this));
+    mainTag.addEventListener("click", this.onNaviTopBtn.bind(this));
   }
 
   onNaviNextBtn(event) {
@@ -306,17 +306,17 @@ export class BeerFinder {
           })
           .catch((error) => console.error(error));
 
-        this.controlNaviNextBtnByEpmtyNextData(input.value);
+        this.controlNaviNextBtnByEmptyNextData(input.value);
 
       case "Random products:":
         this.addRandomProductItems(PRODUCT_PER_PAGE + 1);
     }
   }
 
-  onNaviToptBtn(event) {
+  onNaviTopBtn(event) {
     if (!event.target.classList.contains("navigation__top")) return;
     const firstProduct = this.#appTag.querySelector(".product__item");
-    this.sctorllToElement(firstProduct);
+    this.scrollToElement(firstProduct);
   }
 
   getPageNumber() {
@@ -382,7 +382,7 @@ export class BeerFinder {
     );
   }
 
-  controlNaviNextBtnByEpmtyNextData(param) {
+  controlNaviNextBtnByEmptyNextData(param) {
     this.fetchData(param, this.#pageNumber + 1)
       .then((data) => {
         if (data.length === 0) {
@@ -394,7 +394,7 @@ export class BeerFinder {
       .catch((error) => console.error(error));
   }
 
-  sctorllToElement(element) {
+  scrollToElement(element) {
     element.scrollIntoView();
   }
 
@@ -409,12 +409,12 @@ export class BeerFinder {
       .then((data) => {
         if (data.length) {
           this.addLastSearches(input.value);
-          this.reranderSearchList();
+          this.rerenderSearchList();
         }
         this.renderMainInnerMarkup(data);
         this.controlNaviTopBtnVisibility();
       })
       .catch((error) => console.error(error));
-    this.controlNaviNextBtnByEpmtyNextData(input.value);
+    this.controlNaviNextBtnByEmptyNextData(input.value);
   }
 }
