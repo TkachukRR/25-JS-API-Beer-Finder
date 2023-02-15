@@ -97,9 +97,11 @@ export class BeerFinder {
   addSerachFormListeners() {
     const searchForm = this.#appTag.querySelector(".search");
     const onInputChangeDebounced = this.debounce(this.onInputChange, 250);
+    const searches = this.#appTag.querySelector(".searches");
 
     searchForm.addEventListener("input", onInputChangeDebounced.bind(this));
     searchForm.addEventListener("click", this.onSerchButton.bind(this));
+    searches.addEventListener("click", this.onSearchesButton.bind(this));
   }
 
   onInputChange(event) {
@@ -402,5 +404,26 @@ export class BeerFinder {
 
   sctorllToElement(element) {
     element.scrollIntoView();
+  }
+
+  onSearchesButton(event) {
+    if (event.target.nodeName !== "BUTTON") return;
+    console.log(event.target.textContent);
+
+    const input = this.#appTag.querySelector(".search__input");
+
+    input.value = event.target.textContent;
+
+    this.fetchData(input.value)
+      .then((data) => {
+        if (data.length) {
+          this.addLastSearches(input.value);
+          this.reranderSearchList();
+        }
+        this.renderMainInnerMarkup(data);
+        this.controlNaviTopBtnVisibility();
+      })
+      .catch((error) => console.error(error));
+    this.controlNaviNextBtnByEpmtyNextData(input.value);
   }
 }
