@@ -124,15 +124,15 @@
   color: red;
 }
 
-.navigation {
-  display: block;
-  display: flex;
-  flex-direction: row-reverse;
-  justify-content: space-between;
+.navigation__next {
+  float: right;
 }
 .navigation__top {
+  position: fixed;
   min-width: auto;
   padding: 10px;
+  left: 20px;
+  bottom: 20px;
 }
 
 .hidden {

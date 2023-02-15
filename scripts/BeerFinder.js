@@ -26,12 +26,20 @@ export class BeerFinder {
     this.fetchRandomElement()
       .then((randomElement) => {
         this.renderMainInnerMarkup(randomElement, "Random products");
+
+        this.setNaviTopBtnVisibility();
       })
       .catch((error) => console.error(error));
 
     this.addRendomProductItems(PRODUCT_PER_PAGE);
-
     this.addMainListeners();
+
+    const debouncedSetNaviTopBtnVisibility = this.debounce(
+      this.setNaviTopBtnVisibility.bind(this),
+      100
+    );
+
+    document.addEventListener("scroll", debouncedSetNaviTopBtnVisibility);
   }
 
   renderHeader() {
@@ -255,7 +263,6 @@ export class BeerFinder {
 
     const productListTitle =
       this.#appTag.querySelector(".products__title").textContent;
-    console.log(productListTitle);
 
     switch (productListTitle) {
       case "Serching resault:":
@@ -265,15 +272,11 @@ export class BeerFinder {
         this.fetchData(input.value)
           .then((data) => {
             this.addProductsItems(data);
-            this.setNaviTopBtnVisibility();
           })
           .catch((error) => console.error(error));
 
       case "Random products:":
         this.addRendomProductItems(PRODUCT_PER_PAGE + 1);
-    }
-
-    if (productListTitle === "Random products:") {
     }
   }
 
@@ -298,9 +301,11 @@ export class BeerFinder {
 
   setNaviTopBtnVisibility() {
     const naviTopBtn = this.#appTag.querySelector(".navigation__top");
+    const filstProduct = this.#appTag.querySelector(".product__item");
 
-    if (this.#pageNumber === 1) naviTopBtn.classList.add("hidden");
-    if (this.#pageNumber > 1) naviTopBtn.classList.remove("hidden");
+    this.isElemInViewport(filstProduct)
+      ? naviTopBtn.classList.add("hidden")
+      : naviTopBtn.classList.remove("hidden");
   }
 
   fetchRandomElement() {
@@ -320,5 +325,25 @@ export class BeerFinder {
         })
         .catch((error) => console.error(error));
     }
+  }
+
+  isElemInViewport(elem, full) {
+    var box = elem.getBoundingClientRect();
+    var top = box.top;
+    var left = box.left;
+    var bottom = box.bottom;
+    var right = box.right;
+    var width = document.documentElement.clientWidth;
+    var height = document.documentElement.clientHeight;
+    var maxWidth = 0;
+    var maxHeight = 0;
+    if (full) {
+      maxWidth = right - left;
+      maxHeight = bottom - top;
+    }
+    return (
+      Math.min(height, bottom) - Math.max(0, top) >= maxHeight &&
+      Math.min(width, right) - Math.max(0, left) >= maxWidth
+    );
   }
 }

@@ -157,16 +157,17 @@
 }
 
 .navigation {
-  display: block;
-  display: flex;
-  flex-direction: row-reverse;
-  justify-content: space-between;
-
   &__next {
+    float: right;
   }
   &__top {
+    position: fixed;
+
     min-width: auto;
     padding: 10px;
+
+    left: 20px;
+    bottom: 20px;
   }
 }
 
