@@ -216,7 +216,10 @@ export class BeerFinder {
   }
 
   addLastSearches(lastSearch) {
-    this.#lastSearches = [...this.#lastSearches, lastSearch];
+    this.#lastSearches = [
+      ...this.#lastSearches,
+      lastSearch.trim().toLowerCase(),
+    ];
   }
 
   reranderSearchList() {
