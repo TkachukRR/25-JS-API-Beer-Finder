@@ -223,10 +223,17 @@ export class BeerFinder {
   }
 
   addLastSearches(lastSearch) {
-    this.#lastSearches = [
-      ...this.#lastSearches,
-      lastSearch.trim().toLowerCase(),
-    ];
+    lastSearch = lastSearch.trim().toLowerCase();
+    if (!this.getLastSearches().length) {
+      this.#lastSearches = [...this.#lastSearches, lastSearch];
+      return;
+    }
+
+    let filteredArray = [];
+    filteredArray = this.getLastSearches().filter(
+      (elem) => elem !== lastSearch
+    );
+    this.#lastSearches = [...filteredArray, lastSearch];
   }
 
   reranderSearchList() {
