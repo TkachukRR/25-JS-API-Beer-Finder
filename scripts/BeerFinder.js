@@ -125,7 +125,7 @@ export class BeerFinder {
         }
       })
       .catch((error) => console.error(error));
-    this.controlNaviNextBtnByEmptyNextData(input.value);
+    this.controlNaviNextBtnVisibility(input.value);
   }
 
   onSearchButton(event) {
@@ -150,7 +150,7 @@ export class BeerFinder {
         }
       })
       .catch((error) => console.error(error));
-    this.controlNaviNextBtnByEmptyNextData(input.value);
+    this.controlNaviNextBtnVisibility(input.value);
   }
 
   validationLength(length) {
@@ -306,7 +306,7 @@ export class BeerFinder {
           })
           .catch((error) => console.error(error));
 
-        this.controlNaviNextBtnByEmptyNextData(input.value);
+        this.controlNaviNextBtnVisibility(input.value);
         break;
 
       case "Random products:":
@@ -384,7 +384,7 @@ export class BeerFinder {
     );
   }
 
-  controlNaviNextBtnByEmptyNextData(param) {
+  controlNaviNextBtnVisibility(param) {
     this.fetchData(param, this.#pageNumber + 1)
       .then((data) => {
         if (
@@ -412,14 +412,14 @@ export class BeerFinder {
 
     this.fetchData(input.value)
       .then((data) => {
+        this.renderMainInnerMarkup(data);
         if (data.length) {
           this.addLastSearches(input.value);
           this.rerenderSearchList();
+          this.controlNaviTopBtnVisibility();
         }
-        this.renderMainInnerMarkup(data);
-        this.controlNaviTopBtnVisibility();
       })
       .catch((error) => console.error(error));
-    this.controlNaviNextBtnByEmptyNextData(input.value);
+    this.controlNaviNextBtnVisibility(input.value);
   }
 }
