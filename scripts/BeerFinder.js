@@ -10,6 +10,7 @@ import {
   NAVI_BTN_NEXT_NAME,
   PRODUCT_PER_PAGE,
   NAVI_BTN_TOP_NAME,
+  QUANTITY_SEARCHES_ITEMS,
 } from "./constants.js";
 
 export class BeerFinder {
@@ -238,9 +239,27 @@ export class BeerFinder {
 
   reranderSearchList() {
     const searchList = this.#appTag.querySelector(".searches");
-    const innerMarkup = this.makeListItemsMarkupFromArray(
-      this.getLastSearches()
-    );
+    let innerMarkup;
+    console.log(this.getLastSearches());
+
+    if (this.getLastSearches().length > QUANTITY_SEARCHES_ITEMS) {
+      console.log(
+        this.getLastSearches().slice(
+          this.getLastSearches().length - QUANTITY_SEARCHES_ITEMS,
+          this.getLastSearches().length
+        )
+      );
+
+      innerMarkup = this.makeListItemsMarkupFromArray(
+        this.getLastSearches().slice(
+          this.getLastSearches().length - QUANTITY_SEARCHES_ITEMS,
+          this.getLastSearches().length
+        )
+      );
+    }
+    if (this.getLastSearches().length <= QUANTITY_SEARCHES_ITEMS) {
+      innerMarkup = this.makeListItemsMarkupFromArray(this.getLastSearches());
+    }
 
     searchList.innerHTML = innerMarkup;
   }
