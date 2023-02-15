@@ -200,6 +200,9 @@ export class BeerFinder {
         }</span></h3>
           <p class="product__brewed">First brewed: ${prod.first_brewed}</p>
           <p class="product__desc"> ${prod.description}</p>
+          <button type="button" class="btn product__button" data-productId='${
+            prod.id
+          }'>Add</button>
         </div>
       </li>`
       )
