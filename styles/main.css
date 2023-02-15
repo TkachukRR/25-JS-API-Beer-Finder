@@ -162,6 +162,20 @@
   background: linear-gradient(rgb(76, 77, 82), rgb(56, 57, 62)) rgb(76, 77, 82);
   box-shadow: 0 0 1px rgba(0, 0, 0, 0.5) inset, 0 2px 3px rgba(0, 0, 0, 0.5) inset, 0 1px 1px rgba(255, 255, 255, 0.1);
 }
+.product__button--red {
+  width: 30%;
+  align-self: center;
+  color: #3d3d3d;
+  background: linear-gradient(rgba(255, 58, 58, 0.5), rgba(185, 11, 11, 0.5)) rgba(247, 22, 22, 0.5);
+}
+.product__button--red:hover:not(:active) {
+  background: linear-gradient(rgba(255, 58, 58, 0.75), rgba(185, 11, 11, 0.75)) rgba(247, 22, 22, 0.75);
+}
+.product__button--red:active {
+  top: 1px;
+  background: linear-gradient(rgb(255, 58, 58), rgb(185, 11, 11)) rgb(247, 22, 22);
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.5) inset, 0 2px 3px rgba(0, 0, 0, 0.5) inset, 0 1px 1px rgba(255, 255, 255, 0.1);
+}
 
 .error__products {
   text-align: center;

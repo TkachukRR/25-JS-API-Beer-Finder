@@ -436,9 +436,15 @@ export class BeerFinder {
     const isButton = event.target.nodeName === "BUTTON";
     const isAddBtn = event.target.classList.contains("product__button");
     if (!isButton && !isAddBtn) return;
+    console.log(event.target.classList);
 
-    this.addToFavoriteIDs(event.target.dataset.id);
-    console.log(this.getFavoriteIDs());
+    if (!event.target.classList.contains("product__button--red")) {
+      event.target.classList.replace("product__button", "product__button--red");
+      event.target.textContent = "Remove";
+      this.addToFavoriteIDs(event.target.dataset.id);
+      this.setNewQuantityOnFavouritesBtn();
+      return;
+    }
     this.setNewQuantityOnFavouritesBtn();
   }
 
