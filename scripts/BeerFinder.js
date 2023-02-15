@@ -17,6 +17,7 @@ export class BeerFinder {
   #appTag;
   #lastSearches = [];
   #pageNumber = 1;
+  #favoriteIDs = [];
 
   constructor() {
     this.#appTag = document.querySelector("#beerFinder");
@@ -66,13 +67,17 @@ export class BeerFinder {
   }
 
   makeButtonMarkup(btnName) {
-    return `<button type="button" class="btn button__${btnName.toLowerCase()}">${btnName}</button>`;
+    return `
+      <button type="button" class="btn button__${btnName.toLowerCase()}">
+        ${btnName} 
+        <span class="quantity">${this.getFavoriteIDsQuantity()}</span>
+      </button>`;
   }
 
   makeSearchFormMarkup() {
     return `
      <form class="search">
-        <label class="search__lable">
+        <label class="search__label">
             <input type="text" name="search" class="search__input" placeholder="${SEARCH_FORM_PLACEHOLDER}"/>
         </label>
         <button type="submit" class="search__button" >${SEARCH_FORM_ICON}</button>
@@ -200,7 +205,7 @@ export class BeerFinder {
         }</span></h3>
           <p class="product__brewed">First brewed: ${prod.first_brewed}</p>
           <p class="product__desc"> ${prod.description}</p>
-          <button type="button" class="btn product__button" data-productId='${
+          <button type="button" class="btn product__button" data-id='${
             prod.id
           }'>Add</button>
         </div>
@@ -428,11 +433,29 @@ export class BeerFinder {
   }
 
   onAddToFavoritesBtn(event) {
-    if (
-      event.target.nodeName !== "BUTTON" &&
-      !event.target.classList.contains("product__button")
-    ) {
-      return;
-    }
+    const isButton = event.target.nodeName === "BUTTON";
+    const isAddBtn = event.target.classList.contains("product__button");
+    if (!isButton && !isAddBtn) return;
+
+    this.addToFavoriteIDs(event.target.dataset.id);
+    console.log(this.getFavoriteIDs());
+    this.setNewQuantityOnFavouritesBtn();
+  }
+
+  getFavoriteIDs() {
+    return this.#favoriteIDs;
+  }
+
+  addToFavoriteIDs(newID) {
+    this.#favoriteIDs = [...this.#favoriteIDs, newID];
+  }
+
+  getFavoriteIDsQuantity() {
+    return this.getFavoriteIDs().length;
+  }
+
+  setNewQuantityOnFavouritesBtn() {
+    const favourites = this.#appTag.querySelector(".button__favourites");
+    favourites.firstElementChild.textContent = this.getFavoriteIDsQuantity();
   }
 }
