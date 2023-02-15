@@ -26,7 +26,7 @@ export class BeerFinder {
 
     this.fetchRandomElement()
       .then((randomElement) => {
-        this.renderMainInnerMarkup(randomElement, "Random products");
+        this.renderMainInnerMarkup(randomElement, "Random products:");
 
         this.controlNaviTopBtnVisibility();
       })
@@ -117,12 +117,12 @@ export class BeerFinder {
 
     this.fetchData(input.value)
       .then((data) => {
+        this.renderMainInnerMarkup(data);
         if (data.length) {
           this.addLastSearches(input.value);
           this.rerenderSearchList();
+          this.controlNaviTopBtnVisibility();
         }
-        this.renderMainInnerMarkup(data);
-        this.controlNaviTopBtnVisibility();
       })
       .catch((error) => console.error(error));
     this.controlNaviNextBtnByEmptyNextData(input.value);
@@ -141,13 +141,13 @@ export class BeerFinder {
 
     this.fetchData(input.value)
       .then((data) => {
+        this.renderMainInnerMarkup(data);
+
         if (data.length) {
           this.addLastSearches(input.value);
           this.rerenderSearchList();
+          this.controlNaviTopBtnVisibility();
         }
-
-        this.renderMainInnerMarkup(data);
-        this.controlNaviTopBtnVisibility();
       })
       .catch((error) => console.error(error));
     this.controlNaviNextBtnByEmptyNextData(input.value);
@@ -179,8 +179,8 @@ export class BeerFinder {
 
     return `
       <h2 class="products__title">${
-        productsTitle.length ? productsTitle : "Serching resault"
-      }:</h2>
+        productsTitle.length ? productsTitle : "Searching result:"
+      }</h2>
       <ul class="product__list">
         ${productItemsMarkup}
       </ul>`;
@@ -290,12 +290,19 @@ export class BeerFinder {
 
   onNaviNextBtn(event) {
     if (!event.target.classList.contains("navigation__next")) return;
+    console.log("navigation__next");
 
     const productListTitle =
       this.#appTag.querySelector(".products__title").textContent;
+    console.log(typeof productListTitle);
 
     switch (productListTitle) {
-      case "Serching resault:":
+      case "Searching result:":
+        console.log(
+          "Searching result",
+          productListTitle === "Searching result:"
+        );
+
         this.setPageNumber(this.getPageNumber() + 1);
 
         const input = this.#appTag.querySelector("input.search__input");
@@ -307,9 +314,13 @@ export class BeerFinder {
           .catch((error) => console.error(error));
 
         this.controlNaviNextBtnByEmptyNextData(input.value);
+        break;
 
       case "Random products:":
+        console.log("Random products", productListTitle === "Random products:");
+
         this.addRandomProductItems(PRODUCT_PER_PAGE + 1);
+        break;
     }
   }
 
@@ -385,7 +396,13 @@ export class BeerFinder {
   controlNaviNextBtnByEmptyNextData(param) {
     this.fetchData(param, this.#pageNumber + 1)
       .then((data) => {
-        if (data.length === 0) {
+        console.log(data.length);
+        console.log(data);
+
+        if (
+          data.length === 0 &&
+          this.#appTag.querySelector(".navigation__next")
+        ) {
           this.#appTag
             .querySelector(".navigation__next")
             .classList.add("hidden");
