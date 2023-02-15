@@ -156,8 +156,13 @@
 
   &__image {
     display: block;
-
+    align-self: center;
     margin-right: 15px;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
   }
 
   &__title {
@@ -172,6 +177,35 @@
 
   &__brewed {
     margin-bottom: 10px;
+  }
+
+  &__desc {
+    flex-grow: 1;
+    margin-bottom: 10px;
+  }
+
+  &__button {
+    width: 30%;
+    align-self: center;
+
+    color: #e9e9e9;
+    background: linear-gradient(rgba(110, 112, 120, 0.5), rgb(81, 81, 86, 0.5))
+      rgb(110, 112, 120, 0.5);
+    box-shadow: 0 1px rgba(255, 255, 255, 0.2) inset,
+      0 3px 5px rgba(0, 1, 6, 0.5), 0 0 1px 1px rgba(0, 1, 6, 0.2);
+
+    &:hover:not(:active) {
+      background: linear-gradient(rgb(126, 126, 134, 0.5), rgb(70, 71, 76, 0.5))
+        rgb(126, 126, 134, 0.5);
+    }
+
+    &:active {
+      top: 1px;
+      background: linear-gradient(rgb(76, 77, 82), rgb(56, 57, 62))
+        rgb(76, 77, 82);
+      box-shadow: 0 0 1px rgba(0, 0, 0, 0.5) inset,
+        0 2px 3px rgba(0, 0, 0, 0.5) inset, 0 1px 1px rgba(255, 255, 255, 0.1);
+    }
   }
 }
 

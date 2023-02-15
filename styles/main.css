@@ -125,7 +125,12 @@
 }
 .product__image {
   display: block;
+  align-self: center;
   margin-right: 15px;
+}
+.product__content {
+  display: flex;
+  flex-direction: column;
 }
 .product__title {
   margin-bottom: 10px;
@@ -137,6 +142,25 @@
 }
 .product__brewed {
   margin-bottom: 10px;
+}
+.product__desc {
+  flex-grow: 1;
+  margin-bottom: 10px;
+}
+.product__button {
+  width: 30%;
+  align-self: center;
+  color: #e9e9e9;
+  background: linear-gradient(rgba(110, 112, 120, 0.5), rgba(81, 81, 86, 0.5)) rgba(110, 112, 120, 0.5);
+  box-shadow: 0 1px rgba(255, 255, 255, 0.2) inset, 0 3px 5px rgba(0, 1, 6, 0.5), 0 0 1px 1px rgba(0, 1, 6, 0.2);
+}
+.product__button:hover:not(:active) {
+  background: linear-gradient(rgba(126, 126, 134, 0.5), rgba(70, 71, 76, 0.5)) rgba(126, 126, 134, 0.5);
+}
+.product__button:active {
+  top: 1px;
+  background: linear-gradient(rgb(76, 77, 82), rgb(56, 57, 62)) rgb(76, 77, 82);
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.5) inset, 0 2px 3px rgba(0, 0, 0, 0.5) inset, 0 1px 1px rgba(255, 255, 255, 0.1);
 }
 
 .error__products {
