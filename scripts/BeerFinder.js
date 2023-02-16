@@ -566,8 +566,6 @@ export class BeerFinder {
   }
 
   onProductCard(event) {
-    if (!event.target.classList.contains("product__item")) {
-      return;
-    }
+    if (!event.target.classList.contains("product__item")) return;
   }
 }
