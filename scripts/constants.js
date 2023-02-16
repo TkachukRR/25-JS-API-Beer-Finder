@@ -10,3 +10,4 @@ export const ERROR_MSG =
 export const NAVI_BTN_NEXT_NAME = "load more";
 export const PRODUCT_PER_PAGE = 4;
 export const NAVI_BTN_TOP_NAME = "&#129145";
+export const QUANTITY_SEARCHES_ITEMS = 3;

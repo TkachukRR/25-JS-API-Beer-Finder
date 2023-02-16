@@ -10,6 +10,7 @@ import {
   NAVI_BTN_NEXT_NAME,
   PRODUCT_PER_PAGE,
   NAVI_BTN_TOP_NAME,
+  QUANTITY_SEARCHES_ITEMS,
 } from "./constants.js";
 
 export class BeerFinder {
@@ -21,11 +22,11 @@ export class BeerFinder {
     this.#appTag = document.querySelector("#beerFinder");
 
     this.renderHeader();
-    this.addSerachFormListeners();
+    this.addSearchFormListeners();
 
     this.fetchRandomElement()
       .then((randomElement) => {
-        this.renderMainInnerMarkup(randomElement, "Random products");
+        this.renderMainInnerMarkup(randomElement, "Random products:");
 
         this.controlNaviTopBtnVisibility();
       })
@@ -55,7 +56,7 @@ export class BeerFinder {
     <header class="header">
         ${this.makeHeaderTitleMarkup()}
         ${this.makeButtonMarkup(HEADER_BTN_FAVOURITES)}
-        ${this.makeSearcFormhMarkup()}
+        ${this.makeSearchFormMarkup()}
     </header>
     `;
   }
@@ -68,30 +69,39 @@ export class BeerFinder {
     return `<button type="button" class="btn button__${btnName.toLowerCase()}">${btnName}</button>`;
   }
 
-  makeSearcFormhMarkup() {
+  makeSearchFormMarkup() {
     return `
      <form class="search">
         <label class="search__lable">
             <input type="text" name="search" class="search__input" placeholder="${SEARCH_FORM_PLACEHOLDER}"/>
         </label>
         <button type="submit" class="search__button" >${SEARCH_FORM_ICON}</button>
-        <ul class="search__list">
-            ${this.makeListItemsMarkupFromArray(this.#lastSearches)}
-        </ul>
-    </form>
+      </form>
+      <ul class="searches">
+          ${this.makeListItemsMarkupFromArray(this.#lastSearches)}
+      </ul>
     `;
   }
 
   makeListItemsMarkupFromArray(array) {
-    return array.map((item) => `<li>${item}</li>`).join("");
+    return array
+      .map(
+        (item) => `
+      <li class="searches__item">
+        <button type="button" class="btn searches__button">${item}</button>
+      </li>`
+      )
+      .join("");
   }
 
-  addSerachFormListeners() {
+  addSearchFormListeners() {
     const searchForm = this.#appTag.querySelector(".search");
     const onInputChangeDebounced = this.debounce(this.onInputChange, 250);
+    const searches = this.#appTag.querySelector(".searches");
 
     searchForm.addEventListener("input", onInputChangeDebounced.bind(this));
-    searchForm.addEventListener("click", this.onSerchButton.bind(this));
+    searchForm.addEventListener("click", this.onSearchButton.bind(this));
+    searches.addEventListener("click", this.onSearchesButton.bind(this));
   }
 
   onInputChange(event) {
@@ -107,18 +117,18 @@ export class BeerFinder {
 
     this.fetchData(input.value)
       .then((data) => {
+        this.renderMainInnerMarkup(data);
         if (data.length) {
           this.addLastSearches(input.value);
-          this.reranderSearchList();
+          this.rerenderSearchList();
+          this.controlNaviTopBtnVisibility();
         }
-        this.renderMainInnerMarkup(data);
-        this.controlNaviTopBtnVisibility();
       })
       .catch((error) => console.error(error));
-    this.controlNaviNextBtnByEpmtyNextData(input.value);
+    this.controlNaviNextBtnVisibility(input.value);
   }
 
-  onSerchButton(event) {
+  onSearchButton(event) {
     if (event.target.nodeName !== "BUTTON") return;
     event.preventDefault();
     const input = this.#appTag.querySelector("input.search__input");
@@ -131,16 +141,16 @@ export class BeerFinder {
 
     this.fetchData(input.value)
       .then((data) => {
+        this.renderMainInnerMarkup(data);
+
         if (data.length) {
           this.addLastSearches(input.value);
-          this.reranderSearchList();
+          this.rerenderSearchList();
+          this.controlNaviTopBtnVisibility();
         }
-
-        this.renderMainInnerMarkup(data);
-        this.controlNaviTopBtnVisibility();
       })
       .catch((error) => console.error(error));
-    this.controlNaviNextBtnByEpmtyNextData(input.value);
+    this.controlNaviNextBtnVisibility(input.value);
   }
 
   validationLength(length) {
@@ -158,8 +168,8 @@ export class BeerFinder {
     });
   }
 
-  makeMainMarkup(innerMarup = "") {
-    return `<main class="main">${innerMarup}</main>`;
+  makeMainMarkup(innerMarkup = "") {
+    return `<main class="main">${innerMarkup}</main>`;
   }
 
   makeProductsMarkup(productItemsMarkup, productsTitle = "") {
@@ -169,8 +179,8 @@ export class BeerFinder {
 
     return `
       <h2 class="products__title">${
-        productsTitle.length ? productsTitle : "Serching resault"
-      }:</h2>
+        productsTitle.length ? productsTitle : "Searching result:"
+      }</h2>
       <ul class="product__list">
         ${productItemsMarkup}
       </ul>`;
@@ -206,7 +216,7 @@ export class BeerFinder {
 
     if (!products.length) return;
 
-    const navigation = this.makeNavigationMurkup();
+    const navigation = this.makeNavigationMarkup();
 
     mainTag.insertAdjacentHTML("beforeend", navigation);
   }
@@ -216,14 +226,34 @@ export class BeerFinder {
   }
 
   addLastSearches(lastSearch) {
-    this.#lastSearches = [...this.#lastSearches, lastSearch];
+    lastSearch = lastSearch.trim().toLowerCase();
+    if (!this.getLastSearches().length) {
+      this.#lastSearches = [...this.#lastSearches, lastSearch];
+      return;
+    }
+
+    let filteredArray = [];
+    filteredArray = this.getLastSearches().filter(
+      (elem) => elem !== lastSearch
+    );
+    this.#lastSearches = [...filteredArray, lastSearch];
   }
 
-  reranderSearchList() {
-    const searchList = this.#appTag.querySelector(".search__list");
-    const innerMarkup = this.makeListItemsMarkupFromArray(
-      this.getLastSearches()
-    );
+  rerenderSearchList() {
+    const searchList = this.#appTag.querySelector(".searches");
+    let innerMarkup;
+
+    if (this.getLastSearches().length > QUANTITY_SEARCHES_ITEMS) {
+      innerMarkup = this.makeListItemsMarkupFromArray(
+        this.getLastSearches().slice(
+          this.getLastSearches().length - QUANTITY_SEARCHES_ITEMS,
+          this.getLastSearches().length
+        )
+      );
+    }
+    if (this.getLastSearches().length <= QUANTITY_SEARCHES_ITEMS) {
+      innerMarkup = this.makeListItemsMarkupFromArray(this.getLastSearches());
+    }
 
     searchList.innerHTML = innerMarkup;
   }
@@ -242,7 +272,7 @@ export class BeerFinder {
     };
   }
 
-  makeNavigationMurkup() {
+  makeNavigationMarkup() {
     return `
     <nav class="navigation">
       <button type="button" class="btn navigation__next">${NAVI_BTN_NEXT_NAME}</button>
@@ -255,7 +285,7 @@ export class BeerFinder {
     const mainTag = this.#appTag.querySelector(".main");
 
     mainTag.addEventListener("click", this.onNaviNextBtn.bind(this));
-    mainTag.addEventListener("click", this.onNaviToptBtn.bind(this));
+    mainTag.addEventListener("click", this.onNaviTopBtn.bind(this));
   }
 
   onNaviNextBtn(event) {
@@ -265,7 +295,7 @@ export class BeerFinder {
       this.#appTag.querySelector(".products__title").textContent;
 
     switch (productListTitle) {
-      case "Serching resault:":
+      case "Searching result:":
         this.setPageNumber(this.getPageNumber() + 1);
 
         const input = this.#appTag.querySelector("input.search__input");
@@ -276,17 +306,19 @@ export class BeerFinder {
           })
           .catch((error) => console.error(error));
 
-        this.controlNaviNextBtnByEpmtyNextData(input.value);
+        this.controlNaviNextBtnVisibility(input.value);
+        break;
 
       case "Random products:":
         this.addRandomProductItems(PRODUCT_PER_PAGE + 1);
+        break;
     }
   }
 
-  onNaviToptBtn(event) {
+  onNaviTopBtn(event) {
     if (!event.target.classList.contains("navigation__top")) return;
     const firstProduct = this.#appTag.querySelector(".product__item");
-    this.sctorllToElement(firstProduct);
+    this.scrollToElement(firstProduct);
   }
 
   getPageNumber() {
@@ -352,10 +384,13 @@ export class BeerFinder {
     );
   }
 
-  controlNaviNextBtnByEpmtyNextData(param) {
+  controlNaviNextBtnVisibility(param) {
     this.fetchData(param, this.#pageNumber + 1)
       .then((data) => {
-        if (data.length === 0) {
+        if (
+          data.length === 0 &&
+          this.#appTag.querySelector(".navigation__next")
+        ) {
           this.#appTag
             .querySelector(".navigation__next")
             .classList.add("hidden");
@@ -364,7 +399,27 @@ export class BeerFinder {
       .catch((error) => console.error(error));
   }
 
-  sctorllToElement(element) {
+  scrollToElement(element) {
     element.scrollIntoView();
+  }
+
+  onSearchesButton(event) {
+    if (event.target.nodeName !== "BUTTON") return;
+
+    const input = this.#appTag.querySelector(".search__input");
+
+    input.value = event.target.textContent;
+
+    this.fetchData(input.value)
+      .then((data) => {
+        this.renderMainInnerMarkup(data);
+        if (data.length) {
+          this.addLastSearches(input.value);
+          this.rerenderSearchList();
+          this.controlNaviTopBtnVisibility();
+        }
+      })
+      .catch((error) => console.error(error));
+    this.controlNaviNextBtnVisibility(input.value);
   }
 }
