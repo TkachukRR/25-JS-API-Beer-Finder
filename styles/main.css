@@ -298,4 +298,29 @@
   top: 1px;
   background: linear-gradient(rgb(255, 58, 58), rgb(185, 11, 11)) rgb(247, 22, 22);
   box-shadow: 0 0 1px rgba(0, 0, 0, 0.5) inset, 0 2px 3px rgba(0, 0, 0, 0.5) inset, 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.sproduct__image {
+  margin-bottom: 20px;
+}
+.sproduct__title {
+  margin-bottom: 10px;
+}
+.sproduct__tagline {
+  margin-bottom: 10px;
+}
+.sproduct__brewed {
+  margin-bottom: 10px;
+}
+.sproduct__abv {
+  margin-bottom: 10px;
+}
+.sproduct__pairing {
+  margin-bottom: 10px;
+}
+.sproduct__pairing ul {
+  list-style: none;
+}
+.product__button {
+  margin-top: 10px;
 }/*# sourceMappingURL=main.css.map */

@@ -415,3 +415,40 @@
     }
   }
 }
+
+.sproduct {
+  &__image {
+    margin-bottom: 20px;
+  }
+
+  &__content {
+  }
+
+  &__title {
+    margin-bottom: 10px;
+  }
+  &__tagline {
+    margin-bottom: 10px;
+  }
+  &__brewed {
+    margin-bottom: 10px;
+  }
+  &__abv {
+    margin-bottom: 10px;
+  }
+  &__pairing {
+    margin-bottom: 10px;
+    ul {
+      list-style: none;
+    }
+    li {
+    }
+  }
+}
+
+.product__desc {
+}
+
+.product__button {
+  margin-top: 10px;
+}

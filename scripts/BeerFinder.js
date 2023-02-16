@@ -578,7 +578,6 @@ export class BeerFinder {
 
     this.fetchIDs(productID)
       .then((data) => {
-        console.log(data);
         modalWindow.setContent(this.makeProductCardMarkup(...data));
         const modalClose = document.querySelector(".modal__close");
         modalClose.addEventListener("click", () => {
@@ -611,7 +610,8 @@ export class BeerFinder {
 
   makeProductCardMarkup(prod) {
     return `
-      <h2 class="card__title>Product Information:</h2>
+    <div class="card">
+      <h2 class="card__title">Product Information:</h2>
       <div class="sproduct">
         <img class="sproduct__image" src="${
           prod.image_url === null ? "./bottle.jpg" : prod.image_url
@@ -624,16 +624,18 @@ export class BeerFinder {
           </h3>
           <p class="sproduct__brewed">First brewed: ${prod.first_brewed}</p>
           <p class="sproduct__abv">Alcohol by volume: ${prod.abv}%</p>
-          <p class="sproduct__pairing">Food pairing: 
+          <div class="sproduct__pairing">
+            <p>Food pairing:</p> 
             <ul>
             ${prod.food_pairing.map((elem) => `<li>${elem}</li>`).join("")}
             </ul>
-          </p>
-          <p class="product__desc"> ${prod.description}</p>
+          </div>
+          <p class="sproduct__desc"> ${prod.description}</p>
           <button type="button" class="btn product__button" data-id='${
             prod.id
           }'>Add</button>
         </div>
+      </div>
       </div>
     `;
   }
