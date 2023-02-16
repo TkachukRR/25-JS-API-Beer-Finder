@@ -70,7 +70,7 @@ export class BeerFinder {
     return `
       <button type="button" class="btn button__${btnName.toLowerCase()}">
         ${btnName} 
-        <span class="quantity">${this.getFavoriteIDsQuantity()}</span>
+        <span class="quantity">${this.getFavouriteIDsQuantity()}</span>
       </button>`;
   }
 
@@ -294,7 +294,11 @@ export class BeerFinder {
 
     mainTag.addEventListener("click", this.onNaviNextBtn.bind(this));
     mainTag.addEventListener("click", this.onNaviTopBtn.bind(this));
-    mainTag.addEventListener("click", this.onAddToFavoritesBtn.bind(this));
+    mainTag.addEventListener("click", this.onAddToFavouritesBtn.bind(this));
+    // mainTag.addEventListener(
+    //   "click",
+    //   this.onRemoveFromFavouritesBtn.bind(this)
+    // );
   }
 
   onNaviNextBtn(event) {
@@ -432,32 +436,54 @@ export class BeerFinder {
     this.controlNaviNextBtnVisibility(input.value);
   }
 
-  onAddToFavoritesBtn(event) {
+  onAddToFavouritesBtn(event) {
     const isButton = event.target.nodeName === "BUTTON";
-    const isProductBtn = event.target.classList.contains("product__button");
     const isAddBtn = event.target.textContent === "Add";
-    if (!isButton || !isProductBtn || !isAddBtn) return;
-
+    if (!isButton && !isAddBtn) return;
+    console.log("1");
     event.target.classList.replace("product__button", "product__button--red");
     event.target.textContent = "Remove";
-    this.addToFavoriteIDs(event.target.dataset.id);
+    this.addToFavouriteIDs(event.target.dataset.id);
     this.setNewQuantityOnFavouritesBtn();
+    this.#appTag
+      .querySelector(".main")
+      .addEventListener("click", this.onRemoveFromFavouritesBtn.bind(this));
   }
 
-  getFavoriteIDs() {
+  onRemoveFromFavouritesBtn(event) {
+    const isButton = event.target.nodeName === "BUTTON";
+    const isAddBtn = event.target.textContent === "Remove";
+    if (!isButton && !isAddBtn) return;
+    console.log("2");
+    event.target.classList.replace("product__button--red", "product__button");
+    event.target.textContent = "Add";
+    this.setFavouriteIDs(
+      this.getFavouriteIDs().filter((elem) => elem !== event.target.dataset.id)
+    );
+    this.setNewQuantityOnFavouritesBtn();
+    this.#appTag
+      .querySelector(".main")
+      .addEventListener("click", this.onAddToFavouritesBtn.bind(this));
+  }
+
+  getFavouriteIDs() {
     return this.#favoriteIDs;
   }
 
-  addToFavoriteIDs(newID) {
+  addToFavouriteIDs(newID) {
     this.#favoriteIDs = [...this.#favoriteIDs, newID];
   }
 
-  getFavoriteIDsQuantity() {
-    return this.getFavoriteIDs().length;
+  getFavouriteIDsQuantity() {
+    return this.getFavouriteIDs().length;
   }
 
   setNewQuantityOnFavouritesBtn() {
     const favourites = this.#appTag.querySelector(".button__favourites");
-    favourites.firstElementChild.textContent = this.getFavoriteIDsQuantity();
+    favourites.firstElementChild.textContent = this.getFavouriteIDsQuantity();
+  }
+
+  setFavouriteIDs(IDs) {
+    this.#favoriteIDs = [...IDs];
   }
 }
