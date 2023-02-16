@@ -493,6 +493,8 @@ export class BeerFinder {
   }
 
   onFavouritesBtn() {
+    if (!this.getFavouriteIDs().length) return;
+
     const modalWindow = new Modal();
     modalWindow.show();
 
@@ -501,6 +503,15 @@ export class BeerFinder {
     this.fetchIDs(ids)
       .then((data) => {
         modalWindow.setContent(this.makeFavouritesMarkup(data));
+        const favourites = document.querySelector(".favourites__list");
+        favourites.addEventListener(
+          "click",
+          this.onFavouritesRemoveBtn.bind(this)
+        );
+        const modalClose = document.querySelector(".modal__close");
+        modalClose.addEventListener("click", () => {
+          document.querySelector(".backdrop").remove();
+        });
       })
       .catch((error) => console.error(error));
   }
@@ -520,13 +531,36 @@ export class BeerFinder {
     const items = array
       .map(
         (elem) => `<li class="favourites__item">
-      <h3 class="favourites__name">${elem.name}<h3>
-      <button type="button" class="btn favourites__remove">Remove</button>
+      <h3 class="favourites__name" data-id="${elem.id}">${elem.name}</h3>
+      <button type="button" class="btn favourites__remove" data-id="${elem.id}">Remove</button>
       </li>`
       )
       .join("");
     return `
     <h2 class="favourites__title">favourites</h2>
-    <ul class="class="favourites__list"">${items}</ul>`;
+    <ul class="favourites__list">${items}</ul>`;
+  }
+
+  onFavouritesRemoveBtn(event) {
+    const isButton = event.target.nodeName === "BUTTON";
+    const isRemove = event.target.textContent === "Remove";
+    if (!isButton && !isRemove) {
+      return;
+    }
+
+    const currentID = event.target.dataset.id;
+    const element = this.#appTag.querySelector(
+      `button[data-id='${currentID}']`
+    );
+
+    element.classList.replace("product__button--red", "product__button");
+    element.textContent = "Add";
+
+    this.setFavouriteIDs(
+      this.getFavouriteIDs().filter((elem) => elem !== event.target.dataset.id)
+    );
+    this.setNewQuantityOnFavouritesBtn();
+
+    event.target.parentNode.remove();
   }
 }
