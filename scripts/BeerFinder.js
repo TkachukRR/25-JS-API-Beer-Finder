@@ -12,6 +12,7 @@ import {
   NAVI_BTN_TOP_NAME,
   QUANTITY_SEARCHES_ITEMS,
 } from "./constants.js";
+import { Modal } from "./Modal.js";
 
 export class BeerFinder {
   #appTag;
@@ -23,7 +24,7 @@ export class BeerFinder {
     this.#appTag = document.querySelector("#beerFinder");
 
     this.renderHeader();
-    this.addSearchFormListeners();
+    this.addHeaderListeners();
 
     this.fetchRandomElement()
       .then((randomElement) => {
@@ -99,14 +100,16 @@ export class BeerFinder {
       .join("");
   }
 
-  addSearchFormListeners() {
+  addHeaderListeners() {
     const searchForm = this.#appTag.querySelector(".search");
     const onInputChangeDebounced = this.debounce(this.onInputChange, 250);
     const searches = this.#appTag.querySelector(".searches");
+    const favouritesBtn = this.#appTag.querySelector(".button__favourites");
 
     searchForm.addEventListener("input", onInputChangeDebounced.bind(this));
     searchForm.addEventListener("click", this.onSearchButton.bind(this));
     searches.addEventListener("click", this.onSearchesButton.bind(this));
+    favouritesBtn.addEventListener("click", this.onFavouritesBtn.bind(this));
   }
 
   onInputChange(event) {
@@ -487,5 +490,77 @@ export class BeerFinder {
 
   setFavouriteIDs(IDs) {
     this.#favoriteIDs = [...IDs];
+  }
+
+  onFavouritesBtn() {
+    if (!this.getFavouriteIDs().length) return;
+
+    const modalWindow = new Modal();
+    modalWindow.show();
+
+    const ids = this.getFavouriteIDs().join("|");
+
+    this.fetchIDs(ids)
+      .then((data) => {
+        modalWindow.setContent(this.makeFavouritesMarkup(data));
+        const favourites = document.querySelector(".favourites__list");
+        favourites.addEventListener(
+          "click",
+          this.onFavouritesRemoveBtn.bind(this)
+        );
+        const modalClose = document.querySelector(".modal__close");
+        modalClose.addEventListener("click", () => {
+          document.querySelector(".backdrop").remove();
+        });
+      })
+      .catch((error) => console.error(error));
+  }
+
+  fetchIDs(ids) {
+    return fetch(`https://api.punkapi.com/v2/beers?ids=${ids}`).then(
+      (response) => {
+        if (!response.ok) {
+          throw new Error(response.status);
+        }
+        return response.json();
+      }
+    );
+  }
+
+  makeFavouritesMarkup(array) {
+    const items = array
+      .map(
+        (elem) => `<li class="favourites__item">
+      <h3 class="favourites__name" data-id="${elem.id}">${elem.name}</h3>
+      <button type="button" class="btn favourites__remove" data-id="${elem.id}">Remove</button>
+      </li>`
+      )
+      .join("");
+    return `
+    <h2 class="favourites__title">favourites</h2>
+    <ul class="favourites__list">${items}</ul>`;
+  }
+
+  onFavouritesRemoveBtn(event) {
+    const isButton = event.target.nodeName === "BUTTON";
+    const isRemove = event.target.textContent === "Remove";
+    if (!isButton && !isRemove) {
+      return;
+    }
+
+    const currentID = event.target.dataset.id;
+    const element = this.#appTag.querySelector(
+      `button[data-id='${currentID}']`
+    );
+
+    element.classList.replace("product__button--red", "product__button");
+    element.textContent = "Add";
+
+    this.setFavouriteIDs(
+      this.getFavouriteIDs().filter((elem) => elem !== event.target.dataset.id)
+    );
+    this.setNewQuantityOnFavouritesBtn();
+
+    event.target.parentNode.remove();
   }
 }
