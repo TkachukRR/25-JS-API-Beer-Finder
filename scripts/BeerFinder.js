@@ -295,10 +295,6 @@ export class BeerFinder {
     mainTag.addEventListener("click", this.onNaviNextBtn.bind(this));
     mainTag.addEventListener("click", this.onNaviTopBtn.bind(this));
     mainTag.addEventListener("click", this.onAddToFavouritesBtn.bind(this));
-    // mainTag.addEventListener(
-    //   "click",
-    //   this.onRemoveFromFavouritesBtn.bind(this)
-    // );
   }
 
   onNaviNextBtn(event) {
@@ -438,32 +434,38 @@ export class BeerFinder {
 
   onAddToFavouritesBtn(event) {
     const isButton = event.target.nodeName === "BUTTON";
-    const isAddBtn = event.target.textContent === "Add";
-    if (!isButton && !isAddBtn) return;
-    console.log("1");
-    event.target.classList.replace("product__button", "product__button--red");
-    event.target.textContent = "Remove";
-    this.addToFavouriteIDs(event.target.dataset.id);
-    this.setNewQuantityOnFavouritesBtn();
-    this.#appTag
-      .querySelector(".main")
-      .addEventListener("click", this.onRemoveFromFavouritesBtn.bind(this));
-  }
+    if (!isButton) {
+      return;
+    }
 
-  onRemoveFromFavouritesBtn(event) {
-    const isButton = event.target.nodeName === "BUTTON";
-    const isAddBtn = event.target.textContent === "Remove";
-    if (!isButton && !isAddBtn) return;
-    console.log("2");
-    event.target.classList.replace("product__button--red", "product__button");
-    event.target.textContent = "Add";
-    this.setFavouriteIDs(
-      this.getFavouriteIDs().filter((elem) => elem !== event.target.dataset.id)
-    );
-    this.setNewQuantityOnFavouritesBtn();
-    this.#appTag
-      .querySelector(".main")
-      .addEventListener("click", this.onAddToFavouritesBtn.bind(this));
+    const isAddBtn = "Add";
+    const isRemoveBtn = "Remove";
+
+    switch (event.target.textContent) {
+      case isAddBtn:
+        event.target.classList.replace(
+          "product__button",
+          "product__button--red"
+        );
+        event.target.textContent = "Remove";
+        this.addToFavouriteIDs(event.target.dataset.id);
+        this.setNewQuantityOnFavouritesBtn();
+        return;
+
+      case isRemoveBtn:
+        event.target.classList.replace(
+          "product__button--red",
+          "product__button"
+        );
+        event.target.textContent = "Add";
+        this.setFavouriteIDs(
+          this.getFavouriteIDs().filter(
+            (elem) => elem !== event.target.dataset.id
+          )
+        );
+        this.setNewQuantityOnFavouritesBtn();
+        return;
+    }
   }
 
   getFavouriteIDs() {
