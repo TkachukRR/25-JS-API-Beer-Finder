@@ -23,7 +23,7 @@ export class BeerFinder {
     this.#appTag = document.querySelector("#beerFinder");
 
     this.renderHeader();
-    this.addSearchFormListeners();
+    this.addHeaderListeners();
 
     this.fetchRandomElement()
       .then((randomElement) => {
@@ -99,14 +99,16 @@ export class BeerFinder {
       .join("");
   }
 
-  addSearchFormListeners() {
+  addHeaderListeners() {
     const searchForm = this.#appTag.querySelector(".search");
     const onInputChangeDebounced = this.debounce(this.onInputChange, 250);
     const searches = this.#appTag.querySelector(".searches");
+    const favouritesBtn = this.#appTag.querySelector(".button__favourites");
 
     searchForm.addEventListener("input", onInputChangeDebounced.bind(this));
     searchForm.addEventListener("click", this.onSearchButton.bind(this));
     searches.addEventListener("click", this.onSearchesButton.bind(this));
+    favouritesBtn.addEventListener("click", this.onFavouritesBtn.bind(this));
   }
 
   onInputChange(event) {
@@ -488,4 +490,6 @@ export class BeerFinder {
   setFavouriteIDs(IDs) {
     this.#favoriteIDs = [...IDs];
   }
+
+  onFavouritesBtn() {}
 }
