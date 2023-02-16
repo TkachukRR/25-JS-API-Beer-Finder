@@ -203,9 +203,11 @@ export class BeerFinder {
           prod.image_url === null ? "./bottle.jpg" : prod.image_url
         } " alt="${prod.name}" width="50px"/>
         <div class="product__content">
-          <h3 class="product__title">${prod.name} - <span>${
-          prod.tagline
-        }</span></h3>
+          <h3 class="product__title">
+            ${prod.name} 
+            - 
+            <span class="product__tagline">${prod.tagline}</span>
+          </h3>
           <p class="product__brewed">First brewed: ${prod.first_brewed}</p>
           <p class="product__desc"> ${prod.description}</p>
           <button type="button" class="btn product__button" data-id='${
@@ -566,6 +568,73 @@ export class BeerFinder {
   }
 
   onProductCard(event) {
-    if (!event.target.classList.contains("product__item")) return;
+    const onAddRemoveBtnClick = event.target.hasAttribute("data-id");
+    if (onAddRemoveBtnClick) return;
+
+    const productID = this.getProductCardId(event);
+
+    const modalWindow = new Modal();
+    modalWindow.show();
+
+    this.fetchIDs(productID)
+      .then((data) => {
+        console.log(data);
+        modalWindow.setContent(this.makeProductCardMarkup(...data));
+        const modalClose = document.querySelector(".modal__close");
+        modalClose.addEventListener("click", () => {
+          document.querySelector(".backdrop").remove();
+        });
+      })
+      .catch((error) => console.error(error));
+  }
+
+  getProductCardId(event) {
+    if (event.target.classList.contains("product__tagline")) {
+      return event.target.parentNode.parentNode.querySelector(
+        '[class*="product__button"]'
+      ).dataset.id;
+    }
+
+    if (event.target.classList.contains("product__item")) {
+      return event.target.querySelector('[class*="product__button"]').dataset
+        .id;
+    }
+
+    if (
+      !event.target.classList.contains("product__item") &&
+      !event.target.classList.contains("product__tagline")
+    ) {
+      return event.target.parentNode.querySelector('[class*="product__button"]')
+        .dataset.id;
+    }
+  }
+
+  makeProductCardMarkup(prod) {
+    return `
+      <h2 class="card__title>Product Information:</h2>
+      <div class="sproduct">
+        <img class="sproduct__image" src="${
+          prod.image_url === null ? "./bottle.jpg" : prod.image_url
+        } " alt="${prod.name}" width="50px"/>
+        <div class="sproduct__content">
+          <h3 class="sproduct__title">
+            ${prod.name} 
+            - 
+            <span class="sproduct__tagline">${prod.tagline}</span>
+          </h3>
+          <p class="sproduct__brewed">First brewed: ${prod.first_brewed}</p>
+          <p class="sproduct__abv">Alcohol by volume: ${prod.abv}%</p>
+          <p class="sproduct__pairing">Food pairing: 
+            <ul>
+            ${prod.food_pairing.map((elem) => `<li>${elem}</li>`).join("")}
+            </ul>
+          </p>
+          <p class="product__desc"> ${prod.description}</p>
+          <button type="button" class="btn product__button" data-id='${
+            prod.id
+          }'>Add</button>
+        </div>
+      </div>
+    `;
   }
 }
