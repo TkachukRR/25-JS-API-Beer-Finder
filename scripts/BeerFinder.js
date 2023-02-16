@@ -12,6 +12,7 @@ import {
   NAVI_BTN_TOP_NAME,
   QUANTITY_SEARCHES_ITEMS,
 } from "./constants.js";
+import { Modal } from "./Modal.js";
 
 export class BeerFinder {
   #appTag;
@@ -491,5 +492,41 @@ export class BeerFinder {
     this.#favoriteIDs = [...IDs];
   }
 
-  onFavouritesBtn() {}
+  onFavouritesBtn() {
+    const modalWindow = new Modal();
+    modalWindow.show();
+
+    const ids = this.getFavouriteIDs().join("|");
+
+    this.fetchIDs(ids)
+      .then((data) => {
+        modalWindow.setContent(this.makeFavouritesMarkup(data));
+      })
+      .catch((error) => console.error(error));
+  }
+
+  fetchIDs(ids) {
+    return fetch(`https://api.punkapi.com/v2/beers?ids=${ids}`).then(
+      (response) => {
+        if (!response.ok) {
+          throw new Error(response.status);
+        }
+        return response.json();
+      }
+    );
+  }
+
+  makeFavouritesMarkup(array) {
+    const items = array
+      .map(
+        (elem) => `<li class="favourites__item">
+      <h3 class="favourites__name">${elem.name}<h3>
+      <button type="button" class="btn favourites__remove">Remove</button>
+      </li>`
+      )
+      .join("");
+    return `
+    <h2 class="favourites__title">favourites</h2>
+    <ul class="class="favourites__list"">${items}</ul>`;
+  }
 }
