@@ -570,6 +570,7 @@ export class BeerFinder {
   onProductCard(event) {
     const onAddRemoveBtnClick = event.target.hasAttribute("data-id");
     if (onAddRemoveBtnClick) return;
+    if (event.target.classList.contains("product__list")) return;
 
     const productID = this.getProductCardId(event);
 
