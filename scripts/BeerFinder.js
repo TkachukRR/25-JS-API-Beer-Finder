@@ -506,15 +506,17 @@ export class BeerFinder {
     this.fetchIDs(ids)
       .then((data) => {
         modalWindow.setContent(this.makeFavouritesMarkup(data));
+
         const favourites = document.querySelector(".favourites__list");
+        const modalClose = document.querySelector(".modal__close");
+        const backdrop = document.querySelector(".backdrop");
+
         favourites.addEventListener(
           "click",
           this.onFavouritesRemoveBtn.bind(this)
         );
-        const modalClose = document.querySelector(".modal__close");
-        modalClose.addEventListener("click", () => {
-          document.querySelector(".backdrop").remove();
-        });
+        modalClose.addEventListener("click", this.onModalClose);
+        backdrop.addEventListener("click", this.onModalActiveBackdrop);
       })
       .catch((error) => console.error(error));
   }
@@ -580,10 +582,16 @@ export class BeerFinder {
     this.fetchIDs(productID)
       .then((data) => {
         modalWindow.setContent(this.makeProductCardMarkup(...data));
+
         const modalClose = document.querySelector(".modal__close");
-        modalClose.addEventListener("click", () => {
-          document.querySelector(".backdrop").remove();
-        });
+        const backdrop = document.querySelector(".backdrop");
+        const singleProduct = document.querySelector(".sproduct__content");
+        const addRemoveBtn = singleProduct.querySelector(".product__button");
+
+        modalClose.addEventListener("click", this.onModalClose);
+        document.addEventListener("keydown", this.onModalActiveEscape);
+        backdrop.addEventListener("click", this.onModalActiveBackdrop);
+        addRemoveBtn.addEventListener("click", this.onAddRemoveBtn);
       })
       .catch((error) => console.error(error));
   }
@@ -640,4 +648,21 @@ export class BeerFinder {
       </div>
     `;
   }
+
+  onModalClose() {
+    document.querySelector(".backdrop").remove();
+  }
+
+  onModalActiveEscape(event) {
+    if (!document.querySelector(".modal")) return;
+    if (event.code !== "Escape") return;
+    document.querySelector(".backdrop").remove();
+  }
+
+  onModalActiveBackdrop(event) {
+    if (event.currentTarget !== event.target) return;
+    document.querySelector(".backdrop").remove();
+  }
+
+  onAddRemoveBtn() {}
 }
