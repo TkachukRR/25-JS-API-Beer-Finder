@@ -154,6 +154,8 @@
   &__item {
     display: flex;
 
+    cursor: pointer;
+
     margin: 15px;
     padding: 15px;
     flex-basis: calc((100% - 2 * 30px) / 2);
@@ -161,6 +163,11 @@
     box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.12), 0px 1px 1px rgba(0, 0, 0, 0.14),
       0px 2px 1px rgba(0, 0, 0, 0.2);
     border-radius: 0px 0px 4px 4px;
+
+    &:hover {
+      box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.4), 0px 1px 1px rgba(0, 0, 0, 0.5),
+        0px 2px 1px rgba(0, 0, 0, 0.8);
+    }
   }
 
   &__image {
@@ -172,6 +179,7 @@
   &__content {
     display: flex;
     flex-direction: column;
+    flex-grow: 1;
   }
 
   &__title {
@@ -407,4 +415,70 @@
         0 2px 3px rgba(0, 0, 0, 0.5) inset, 0 1px 1px rgba(255, 255, 255, 0.1);
     }
   }
+}
+
+.card {
+  &__title {
+    margin-bottom: 20px;
+  }
+}
+
+.sproduct {
+  display: flex;
+
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  &__image {
+    display: block;
+    align-self: center;
+    margin-right: 15px;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+  }
+
+  &__title {
+    margin-bottom: 10px;
+    font-weight: 700;
+
+    & span {
+      color: rgb(87, 87, 87);
+      font-weight: 500;
+    }
+  }
+  &__tagline {
+    margin-bottom: 10px;
+  }
+  &__brewed {
+    margin-bottom: 10px;
+  }
+  &__abv {
+    margin-bottom: 10px;
+  }
+  &__pairing {
+    margin-bottom: 10px;
+    p {
+      text-align: left;
+    }
+    ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      align-items: start;
+    }
+    li {
+      margin-left: 10px;
+    }
+  }
+  &__desc {
+    margin-bottom: 10px;
+    text-align: left;
+  }
+}
+
+.product__button {
 }

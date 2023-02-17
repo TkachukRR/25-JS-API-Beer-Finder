@@ -203,9 +203,11 @@ export class BeerFinder {
           prod.image_url === null ? "./bottle.jpg" : prod.image_url
         } " alt="${prod.name}" width="50px"/>
         <div class="product__content">
-          <h3 class="product__title">${prod.name} - <span>${
-          prod.tagline
-        }</span></h3>
+          <h3 class="product__title">
+            ${prod.name} 
+            - 
+            <span class="product__tagline">${prod.tagline}</span>
+          </h3>
           <p class="product__brewed">First brewed: ${prod.first_brewed}</p>
           <p class="product__desc"> ${prod.description}</p>
           <button type="button" class="btn product__button" data-id='${
@@ -298,6 +300,7 @@ export class BeerFinder {
     mainTag.addEventListener("click", this.onNaviNextBtn.bind(this));
     mainTag.addEventListener("click", this.onNaviTopBtn.bind(this));
     mainTag.addEventListener("click", this.onAddToFavouritesBtn.bind(this));
+    mainTag.addEventListener("click", this.onProductCard.bind(this));
   }
 
   onNaviNextBtn(event) {
@@ -503,15 +506,17 @@ export class BeerFinder {
     this.fetchIDs(ids)
       .then((data) => {
         modalWindow.setContent(this.makeFavouritesMarkup(data));
+
         const favourites = document.querySelector(".favourites__list");
+        const modalClose = document.querySelector(".modal__close");
+        const backdrop = document.querySelector(".backdrop");
+
         favourites.addEventListener(
           "click",
           this.onFavouritesRemoveBtn.bind(this)
         );
-        const modalClose = document.querySelector(".modal__close");
-        modalClose.addEventListener("click", () => {
-          document.querySelector(".backdrop").remove();
-        });
+        modalClose.addEventListener("click", this.onModalClose);
+        backdrop.addEventListener("click", this.onModalActiveBackdrop);
       })
       .catch((error) => console.error(error));
   }
@@ -562,5 +567,149 @@ export class BeerFinder {
     this.setNewQuantityOnFavouritesBtn();
 
     event.target.parentNode.remove();
+  }
+
+  onProductCard(event) {
+    const onAddRemoveBtnClick = event.target.hasAttribute("data-id");
+    if (onAddRemoveBtnClick) return;
+    if (event.target.classList.contains("product__list")) return;
+
+    const productID = this.getProductCardId(event);
+
+    const modalWindow = new Modal();
+    modalWindow.show();
+
+    this.fetchIDs(productID)
+      .then((data) => {
+        modalWindow.setContent(this.makeProductCardMarkup(...data));
+
+        const modalClose = document.querySelector(".modal__close");
+        const backdrop = document.querySelector(".backdrop");
+        const singleProduct = document.querySelector(".sproduct__content");
+        const addRemoveBtn = singleProduct.querySelector(".product__button");
+
+        if (this.getFavouriteIDs().includes(productID)) {
+          addRemoveBtn.classList.add("product__button--red");
+          addRemoveBtn.textContent = "Remove";
+        }
+
+        modalClose.addEventListener("click", this.onModalClose);
+        document.addEventListener("keydown", this.onModalActiveEscape);
+        backdrop.addEventListener("click", this.onModalActiveBackdrop);
+        addRemoveBtn.addEventListener("click", this.onAddRemoveBtn.bind(this));
+      })
+      .catch((error) => console.error(error));
+  }
+
+  getProductCardId(event) {
+    if (event.target.classList.contains("product__tagline")) {
+      return event.target.parentNode.parentNode.querySelector(
+        '[class*="product__button"]'
+      ).dataset.id;
+    }
+
+    if (event.target.classList.contains("product__item")) {
+      return event.target.querySelector('[class*="product__button"]').dataset
+        .id;
+    }
+
+    if (
+      !event.target.classList.contains("product__item") &&
+      !event.target.classList.contains("product__tagline")
+    ) {
+      return event.target.parentNode.querySelector('[class*="product__button"]')
+        .dataset.id;
+    }
+  }
+
+  makeProductCardMarkup(prod) {
+    return `
+    <div class="card">
+      <h2 class="card__title">Product Information:</h2>
+      <div class="sproduct">
+        <img class="sproduct__image" src="${
+          prod.image_url === null ? "./bottle.jpg" : prod.image_url
+        } " alt="${prod.name}" width="50px"/>
+        <div class="sproduct__content">
+          <h3 class="sproduct__title">
+            ${prod.name} 
+            - 
+            <span class="sproduct__tagline">${prod.tagline}</span>
+          </h3>
+          <p class="sproduct__brewed">First brewed: ${prod.first_brewed}</p>
+          <p class="sproduct__abv">Alcohol by volume: ${prod.abv}%</p>
+          <div class="sproduct__pairing">
+            <p>Food pairing:</p> 
+            <ul>
+            ${prod.food_pairing.map((elem) => `<li>${elem}</li>`).join("")}
+            </ul>
+          </div>
+          <p class="sproduct__desc"> ${prod.description}</p>
+          <button type="button" class="btn product__button" data-id='${
+            prod.id
+          }'>Add</button>
+        </div>
+      </div>
+      </div>
+    `;
+  }
+
+  onModalClose() {
+    document.querySelector(".backdrop").remove();
+  }
+
+  onModalActiveEscape(event) {
+    if (!document.querySelector(".modal")) return;
+    if (event.code !== "Escape") return;
+    document.querySelector(".backdrop").remove();
+  }
+
+  onModalActiveBackdrop(event) {
+    if (event.currentTarget !== event.target) return;
+    document.querySelector(".backdrop").remove();
+  }
+
+  onAddRemoveBtn(event) {
+    const productID = event.target.dataset.id;
+    const isRemoveBtn = event.target.classList.contains("product__button--red");
+
+    switch (isRemoveBtn) {
+      case true:
+        event.target.classList.remove("product__button--red");
+        event.target.classList.add("product__button");
+        event.target.textContent = "Add";
+        this.setFavouriteIDs(
+          this.getFavouriteIDs().filter((elem) => elem !== productID)
+        );
+        this.setNewQuantityOnFavouritesBtn();
+        break;
+
+      case false:
+        event.target.classList.add("product__button--red");
+        event.target.classList.remove("product__button");
+        event.target.textContent = "Remove";
+        this.addToFavouriteIDs(productID);
+        this.setNewQuantityOnFavouritesBtn();
+
+        break;
+    }
+    const products = this.#appTag.querySelector(".product__list");
+    const productAddRemoveBtn = products.querySelector(
+      `[data-id="${productID}"]`
+    );
+    const isRemoveProductBtn = productAddRemoveBtn.classList.contains(
+      "product__button--red"
+    );
+
+    switch (isRemoveProductBtn) {
+      case true:
+        productAddRemoveBtn.classList.remove("product__button--red");
+        productAddRemoveBtn.textContent = "Add";
+        break;
+      case false:
+        productAddRemoveBtn.classList.add("product__button--red");
+        productAddRemoveBtn.textContent = "Remove";
+        break;
+    }
   }
 }
