@@ -300,11 +300,33 @@
   box-shadow: 0 0 1px rgba(0, 0, 0, 0.5) inset, 0 2px 3px rgba(0, 0, 0, 0.5) inset, 0 1px 1px rgba(255, 255, 255, 0.1);
 }
 
-.sproduct__image {
+.card__title {
   margin-bottom: 20px;
+}
+
+.sproduct {
+  display: flex;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+}
+.sproduct__image {
+  display: block;
+  align-self: center;
+  margin-right: 15px;
+}
+.sproduct__content {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
 }
 .sproduct__title {
   margin-bottom: 10px;
+  font-weight: 700;
+}
+.sproduct__title span {
+  color: rgb(87, 87, 87);
+  font-weight: 500;
 }
 .sproduct__tagline {
   margin-bottom: 10px;
@@ -318,9 +340,19 @@
 .sproduct__pairing {
   margin-bottom: 10px;
 }
+.sproduct__pairing p {
+  text-align: left;
+}
 .sproduct__pairing ul {
   list-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
 }
-.product__button {
-  margin-top: 10px;
+.sproduct__pairing li {
+  margin-left: 10px;
+}
+.sproduct__desc {
+  margin-bottom: 10px;
+  text-align: left;
 }/*# sourceMappingURL=main.css.map */

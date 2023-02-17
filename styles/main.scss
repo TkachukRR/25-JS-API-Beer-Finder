@@ -416,16 +416,38 @@
   }
 }
 
-.sproduct {
-  &__image {
+.card {
+  &__title {
     margin-bottom: 20px;
+  }
+}
+
+.sproduct {
+  display: flex;
+
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  &__image {
+    display: block;
+    align-self: center;
+    margin-right: 15px;
   }
 
   &__content {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
   }
 
   &__title {
     margin-bottom: 10px;
+    font-weight: 700;
+
+    & span {
+      color: rgb(87, 87, 87);
+      font-weight: 500;
+    }
   }
   &__tagline {
     margin-bottom: 10px;
@@ -438,17 +460,24 @@
   }
   &__pairing {
     margin-bottom: 10px;
+    p {
+      text-align: left;
+    }
     ul {
       list-style: none;
+      display: flex;
+      flex-direction: column;
+      align-items: start;
     }
     li {
+      margin-left: 10px;
     }
+  }
+  &__desc {
+    margin-bottom: 10px;
+    text-align: left;
   }
 }
 
-.product__desc {
-}
-
 .product__button {
-  margin-top: 10px;
 }
