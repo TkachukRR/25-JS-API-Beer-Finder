@@ -588,10 +588,15 @@ export class BeerFinder {
         const singleProduct = document.querySelector(".sproduct__content");
         const addRemoveBtn = singleProduct.querySelector(".product__button");
 
+        if (this.getFavouriteIDs().includes(productID)) {
+          addRemoveBtn.classList.add("product__button--red");
+          addRemoveBtn.textContent = "Remove";
+        }
+
         modalClose.addEventListener("click", this.onModalClose);
         document.addEventListener("keydown", this.onModalActiveEscape);
         backdrop.addEventListener("click", this.onModalActiveBackdrop);
-        addRemoveBtn.addEventListener("click", this.onAddRemoveBtn);
+        addRemoveBtn.addEventListener("click", this.onAddRemoveBtn.bind(this));
       })
       .catch((error) => console.error(error));
   }
@@ -664,5 +669,47 @@ export class BeerFinder {
     document.querySelector(".backdrop").remove();
   }
 
-  onAddRemoveBtn() {}
+  onAddRemoveBtn(event) {
+    const productID = event.target.dataset.id;
+    const isRemoveBtn = event.target.classList.contains("product__button--red");
+
+    switch (isRemoveBtn) {
+      case true:
+        event.target.classList.remove("product__button--red");
+        event.target.classList.add("product__button");
+        event.target.textContent = "Add";
+        this.setFavouriteIDs(
+          this.getFavouriteIDs().filter((elem) => elem !== productID)
+        );
+        this.setNewQuantityOnFavouritesBtn();
+        break;
+
+      case false:
+        event.target.classList.add("product__button--red");
+        event.target.classList.remove("product__button");
+        event.target.textContent = "Remove";
+        this.addToFavouriteIDs(productID);
+        this.setNewQuantityOnFavouritesBtn();
+
+        break;
+    }
+    const products = this.#appTag.querySelector(".product__list");
+    const productAddRemoveBtn = products.querySelector(
+      `[data-id="${productID}"]`
+    );
+    const isRemoveProductBtn = productAddRemoveBtn.classList.contains(
+      "product__button--red"
+    );
+
+    switch (isRemoveProductBtn) {
+      case true:
+        productAddRemoveBtn.classList.remove("product__button--red");
+        productAddRemoveBtn.textContent = "Add";
+        break;
+      case false:
+        productAddRemoveBtn.classList.add("product__button--red");
+        productAddRemoveBtn.textContent = "Remove";
+        break;
+    }
+  }
 }
