@@ -6,7 +6,7 @@
   padding: 0;
 }
 
-.containter {
+.container {
   margin: 0 auto;
   padding: 20px;
   width: 1200px;
@@ -195,8 +195,9 @@
   color: red;
 }
 
-.navigation__next {
-  float: right;
+.navigation {
+  display: flex;
+  justify-content: end;
 }
 .navigation__top {
   position: fixed;

@@ -13,6 +13,7 @@ import {
   QUANTITY_SEARCHES_ITEMS,
 } from "./constants.js";
 import { Modal } from "./Modal.js";
+import { getLocalStorage, setLocalStorage } from "./localStorage.js";
 
 export class BeerFinder {
   #appTag;
@@ -22,6 +23,14 @@ export class BeerFinder {
 
   constructor() {
     this.#appTag = document.querySelector("#beerFinder");
+
+    if (getLocalStorage("searches")) {
+      this.setLastSearches(getLocalStorage("searches"));
+    }
+
+    if (getLocalStorage("favoriteIDs")) {
+      this.setFavouriteIDs(getLocalStorage("favoriteIDs"));
+    }
 
     this.renderHeader();
     this.addHeaderListeners();
@@ -57,7 +66,7 @@ export class BeerFinder {
     return `
     <header class="header">
         ${this.makeHeaderTitleMarkup()}
-        ${this.makeButtonMarkup(HEADER_BTN_FAVOURITES)}
+        ${this.makeFavouritesButtonMarkup(HEADER_BTN_FAVOURITES)}
         ${this.makeSearchFormMarkup()}
     </header>
     `;
@@ -67,11 +76,11 @@ export class BeerFinder {
     return `<h1 class="header__title">${APP_NAME.toUpperCase()}</h1>`;
   }
 
-  makeButtonMarkup(btnName) {
+  makeFavouritesButtonMarkup(btnName) {
     return `
-      <button type="button" class="btn button__${btnName.toLowerCase()}">
-        ${btnName} 
-        <span class="quantity">${this.getFavouriteIDsQuantity()}</span>
+      <button type="button" class="btn button__favourites">
+        Favourites
+        <span class="quantity">${this.getFavouritesQuantity()}</span>
       </button>`;
   }
 
@@ -128,6 +137,7 @@ export class BeerFinder {
         this.renderMainInnerMarkup(data);
         if (data.length) {
           this.addLastSearches(input.value);
+          setLocalStorage("searches", this.getLastSearches());
           this.rerenderSearchList();
           this.controlNaviTopBtnVisibility();
         }
@@ -153,6 +163,7 @@ export class BeerFinder {
 
         if (data.length) {
           this.addLastSearches(input.value);
+          setLocalStorage("searches", this.getLastSearches());
           this.rerenderSearchList();
           this.controlNaviTopBtnVisibility();
         }
@@ -455,6 +466,7 @@ export class BeerFinder {
         );
         event.target.textContent = "Remove";
         this.addToFavouriteIDs(event.target.dataset.id);
+        setLocalStorage("favoriteIDs", this.getFavouriteIDs());
         this.setNewQuantityOnFavouritesBtn();
         return;
 
@@ -469,6 +481,7 @@ export class BeerFinder {
             (elem) => elem !== event.target.dataset.id
           )
         );
+        setLocalStorage("favoriteIDs", this.getFavouriteIDs());
         this.setNewQuantityOnFavouritesBtn();
         return;
     }
@@ -482,13 +495,13 @@ export class BeerFinder {
     this.#favoriteIDs = [...this.#favoriteIDs, newID];
   }
 
-  getFavouriteIDsQuantity() {
+  getFavouritesQuantity() {
     return this.getFavouriteIDs().length;
   }
 
   setNewQuantityOnFavouritesBtn() {
     const favourites = this.#appTag.querySelector(".button__favourites");
-    favourites.firstElementChild.textContent = this.getFavouriteIDsQuantity();
+    favourites.firstElementChild.textContent = this.getFavouritesQuantity();
   }
 
   setFavouriteIDs(IDs) {
@@ -558,12 +571,14 @@ export class BeerFinder {
       `button[data-id='${currentID}']`
     );
 
-    element.classList.replace("product__button--red", "product__button");
-    element.textContent = "Add";
-
+    if (element) {
+      element.classList.replace("product__button--red", "product__button");
+      element.textContent = "Add";
+    }
     this.setFavouriteIDs(
       this.getFavouriteIDs().filter((elem) => elem !== event.target.dataset.id)
     );
+    setLocalStorage("favoriteIDs", this.getFavouriteIDs());
     this.setNewQuantityOnFavouritesBtn();
 
     event.target.parentNode.remove();
@@ -571,8 +586,13 @@ export class BeerFinder {
 
   onProductCard(event) {
     const onAddRemoveBtnClick = event.target.hasAttribute("data-id");
-    if (onAddRemoveBtnClick) return;
-    if (event.target.classList.contains("product__list")) return;
+    if (
+      onAddRemoveBtnClick ||
+      event.target.classList.contains("product__list") ||
+      event.target.classList.contains("navigation") ||
+      event.target.classList.contains("navigation__next")
+    )
+      return;
 
     const productID = this.getProductCardId(event);
 
@@ -681,6 +701,7 @@ export class BeerFinder {
         this.setFavouriteIDs(
           this.getFavouriteIDs().filter((elem) => elem !== productID)
         );
+        setLocalStorage("favoriteIDs", this.getFavouriteIDs());
         this.setNewQuantityOnFavouritesBtn();
         break;
 
@@ -689,6 +710,7 @@ export class BeerFinder {
         event.target.classList.remove("product__button");
         event.target.textContent = "Remove";
         this.addToFavouriteIDs(productID);
+        setLocalStorage("favoriteIDs", this.getFavouriteIDs());
         this.setNewQuantityOnFavouritesBtn();
 
         break;
@@ -711,5 +733,9 @@ export class BeerFinder {
         productAddRemoveBtn.textContent = "Remove";
         break;
     }
+  }
+
+  setLastSearches(array) {
+    this.#lastSearches = [...array];
   }
 }
