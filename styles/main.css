@@ -8,8 +8,11 @@
 
 .container {
   margin: 0 auto;
-  padding: 20px;
   width: 1200px;
+  background-color: rgba(255, 255, 255, 0.5);
+  min-height: 100vh;
+  position: relative;
+  border-radius: 8px;
 }
 
 .btn {
@@ -44,15 +47,22 @@
 
 .header {
   position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 20px;
+  padding: 20px;
+}
+.header :nth-child(2) {
+  align-self: stretch;
 }
 .header__title {
   text-align: center;
   margin-bottom: 15px;
-}
-
-.button__favourites {
-  position: absolute;
-  right: 0;
+  content: url("./../beerfinder.png");
+  height: 120px;
+  width: 120px;
 }
 
 .search {
@@ -117,6 +127,10 @@
   outline: 1px solid red;
 }
 
+.products__title {
+  text-align: center;
+}
+
 .product__list {
   list-style: none;
   display: flex;
@@ -128,8 +142,9 @@
   margin: 15px;
   padding: 15px;
   flex-basis: calc((100% - 60px) / 2);
+  background-color: rgba(255, 255, 255, 0.5);
   box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.12), 0px 1px 1px rgba(0, 0, 0, 0.14), 0px 2px 1px rgba(0, 0, 0, 0.2);
-  border-radius: 0px 0px 4px 4px;
+  border-radius: 4px;
 }
 .product__item:hover {
   box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.4), 0px 1px 1px rgba(0, 0, 0, 0.5), 0px 2px 1px rgba(0, 0, 0, 0.8);
@@ -198,6 +213,7 @@
 .navigation {
   display: flex;
   justify-content: end;
+  margin: 20px;
 }
 .navigation__top {
   position: fixed;
@@ -357,4 +373,12 @@
 .sproduct__desc {
   margin-bottom: 10px;
   text-align: left;
+}
+
+body {
+  background-image: url("./../bg2.jpg");
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
 }/*# sourceMappingURL=main.css.map */

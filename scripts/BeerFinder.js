@@ -55,10 +55,10 @@ export class BeerFinder {
   }
 
   renderHeader() {
-    const headeMarkup = this.makeHeaderMarkup();
+    const headerMarkup = this.makeHeaderMarkup();
     const mainTag = this.makeMainMarkup();
 
-    this.#appTag.insertAdjacentHTML("beforeend", headeMarkup);
+    this.#appTag.insertAdjacentHTML("beforeend", headerMarkup);
     this.#appTag.insertAdjacentHTML("beforeend", mainTag);
   }
 
@@ -66,8 +66,8 @@ export class BeerFinder {
     return `
     <header class="header">
         ${this.makeHeaderTitleMarkup()}
-        ${this.makeFavouritesButtonMarkup(HEADER_BTN_FAVOURITES)}
         ${this.makeSearchFormMarkup()}
+        ${this.makeFavouritesButtonMarkup(HEADER_BTN_FAVOURITES)}
     </header>
     `;
   }
@@ -86,6 +86,7 @@ export class BeerFinder {
 
   makeSearchFormMarkup() {
     return `
+    <div>
      <form class="search">
         <label class="search__label">
             <input type="text" name="search" class="search__input" placeholder="${SEARCH_FORM_PLACEHOLDER}"/>
@@ -95,6 +96,7 @@ export class BeerFinder {
       <ul class="searches">
           ${this.makeListItemsMarkupFromArray(this.#lastSearches)}
       </ul>
+    </div>
     `;
   }
 
@@ -211,7 +213,7 @@ export class BeerFinder {
         (prod) => `
       <li class="product__item">
         <img class="product__image" src="${
-          prod.image_url === null ? "./bottle.jpg" : prod.image_url
+          prod.image_url === null ? "./bottle.png" : prod.image_url
         } " alt="${prod.name}" width="50px"/>
         <div class="product__content">
           <h3 class="product__title">
@@ -648,7 +650,7 @@ export class BeerFinder {
       <h2 class="card__title">Product Information:</h2>
       <div class="sproduct">
         <img class="sproduct__image" src="${
-          prod.image_url === null ? "./bottle.jpg" : prod.image_url
+          prod.image_url === null ? "./bottle.png" : prod.image_url
         } " alt="${prod.name}" width="50px"/>
         <div class="sproduct__content">
           <h3 class="sproduct__title">
