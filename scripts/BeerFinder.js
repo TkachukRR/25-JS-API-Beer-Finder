@@ -10,9 +10,10 @@ import {
   NAVI_BTN_NEXT_NAME,
   PRODUCT_PER_PAGE,
   NAVI_BTN_TOP_NAME,
-  QUANTITY_SEARCHES_ITEMS,
+  SEARCHES_LENGTH,
 } from "./constants.js";
 import { Modal } from "./Modal.js";
+import { getLocalStorage, setLocalStorage } from "./localStorage.js";
 
 export class BeerFinder {
   #appTag;
@@ -22,8 +23,22 @@ export class BeerFinder {
 
   constructor() {
     this.#appTag = document.querySelector("#beerFinder");
+    const isLocalStorageContainsSearches = getLocalStorage("searches");
+    const isLocalStorageContainsFavoriteIDs = getLocalStorage("favoriteIDs");
+    const setFromLocalStorageSearches = () =>
+      this.setLastSearches(getLocalStorage("searches"));
+    const setFromLocalStorageFavouriteIDs = () =>
+      this.setFavouriteIDs(getLocalStorage("favoriteIDs"));
 
-    this.renderHeader();
+    if (isLocalStorageContainsSearches) {
+      setFromLocalStorageSearches();
+    }
+
+    if (isLocalStorageContainsFavoriteIDs) {
+      setFromLocalStorageFavouriteIDs();
+    }
+
+    this.renderApp();
     this.addHeaderListeners();
 
     this.fetchRandomElement()
@@ -45,20 +60,20 @@ export class BeerFinder {
     document.addEventListener("scroll", debouncedSetNaviTopBtnVisibility);
   }
 
-  renderHeader() {
-    const headeMarkup = this.makeHeaderMarkup();
-    const mainTag = this.makeMainMarkup();
+  renderApp() {
+    const headerMarkup = this.makeHeaderMarkup();
+    const mainMarkup = this.makeMainMarkup();
 
-    this.#appTag.insertAdjacentHTML("beforeend", headeMarkup);
-    this.#appTag.insertAdjacentHTML("beforeend", mainTag);
+    this.#appTag.insertAdjacentHTML("beforeend", headerMarkup);
+    this.#appTag.insertAdjacentHTML("beforeend", mainMarkup);
   }
 
   makeHeaderMarkup() {
     return `
     <header class="header">
         ${this.makeHeaderTitleMarkup()}
-        ${this.makeButtonMarkup(HEADER_BTN_FAVOURITES)}
         ${this.makeSearchFormMarkup()}
+        ${this.makeFavouritesButtonMarkup(HEADER_BTN_FAVOURITES)}
     </header>
     `;
   }
@@ -67,16 +82,20 @@ export class BeerFinder {
     return `<h1 class="header__title">${APP_NAME.toUpperCase()}</h1>`;
   }
 
-  makeButtonMarkup(btnName) {
+  makeFavouritesButtonMarkup(btnName) {
     return `
-      <button type="button" class="btn button__${btnName.toLowerCase()}">
-        ${btnName} 
-        <span class="quantity">${this.getFavouriteIDsQuantity()}</span>
+      <button type="button" class="btn button__favourites">
+        Favourites
+        <span class="quantity">${this.getFavouritesQuantity()}</span>
       </button>`;
   }
 
   makeSearchFormMarkup() {
+    const searchesMarkup = this.makeListItemsMarkupFromArray(
+      this.getLastSearches()
+    );
     return `
+    <div>
      <form class="search">
         <label class="search__label">
             <input type="text" name="search" class="search__input" placeholder="${SEARCH_FORM_PLACEHOLDER}"/>
@@ -84,8 +103,9 @@ export class BeerFinder {
         <button type="submit" class="search__button" >${SEARCH_FORM_ICON}</button>
       </form>
       <ul class="searches">
-          ${this.makeListItemsMarkupFromArray(this.#lastSearches)}
+          ${searchesMarkup}
       </ul>
+    </div>
     `;
   }
 
@@ -126,11 +146,14 @@ export class BeerFinder {
     this.fetchData(input.value)
       .then((data) => {
         this.renderMainInnerMarkup(data);
-        if (data.length) {
-          this.addLastSearches(input.value);
-          this.rerenderSearchList();
-          this.controlNaviTopBtnVisibility();
+        if (!data.length) {
+          return;
         }
+
+        this.addLastSearches(input.value);
+        setLocalStorage("searches", this.getLastSearches());
+        this.rerenderSearchList();
+        this.controlNaviTopBtnVisibility();
       })
       .catch((error) => console.error(error));
     this.controlNaviNextBtnVisibility(input.value);
@@ -151,11 +174,14 @@ export class BeerFinder {
       .then((data) => {
         this.renderMainInnerMarkup(data);
 
-        if (data.length) {
-          this.addLastSearches(input.value);
-          this.rerenderSearchList();
-          this.controlNaviTopBtnVisibility();
+        if (!data.length) {
+          return;
         }
+
+        this.addLastSearches(input.value);
+        setLocalStorage("searches", this.getLastSearches());
+        this.rerenderSearchList();
+        this.controlNaviTopBtnVisibility();
       })
       .catch((error) => console.error(error));
     this.controlNaviNextBtnVisibility(input.value);
@@ -195,12 +221,14 @@ export class BeerFinder {
   }
 
   makeProductItemMarkup(products) {
+    const hasImageUrl = (prod) => prod.image_url === null;
+
     return products
       .map(
         (prod) => `
       <li class="product__item">
         <img class="product__image" src="${
-          prod.image_url === null ? "./bottle.jpg" : prod.image_url
+          hasImageUrl(prod) ? "./bottle.png" : prod.image_url
         } " alt="${prod.name}" width="50px"/>
         <div class="product__content">
           <h3 class="product__title">
@@ -210,13 +238,21 @@ export class BeerFinder {
           </h3>
           <p class="product__brewed">First brewed: ${prod.first_brewed}</p>
           <p class="product__desc"> ${prod.description}</p>
-          <button type="button" class="btn product__button" data-id='${
-            prod.id
-          }'>Add</button>
+          ${this.makeAddOrRemoveBtn(prod.id)}
         </div>
       </li>`
       )
       .join("");
+  }
+
+  makeAddOrRemoveBtn(id) {
+    return `<button type="button" class="btn ${
+      this.checkProductOnFavourites(id)
+        ? "product__button--red"
+        : "product__button"
+    }" data-id='${id}'>
+    ${this.checkProductOnFavourites(id) ? "Remove" : "Add"}
+    </button>`;
   }
 
   renderMainInnerMarkup(products, productsTitle) {
@@ -239,36 +275,32 @@ export class BeerFinder {
   }
 
   addLastSearches(lastSearch) {
-    lastSearch = lastSearch.trim().toLowerCase();
-    if (!this.getLastSearches().length) {
-      this.#lastSearches = [...this.#lastSearches, lastSearch];
-      return;
-    }
+    const processedLastSearch = lastSearch.trim().toLowerCase();
 
     let filteredArray = [];
     filteredArray = this.getLastSearches().filter(
-      (elem) => elem !== lastSearch
+      (elem) => elem !== processedLastSearch
     );
-    this.#lastSearches = [...filteredArray, lastSearch];
+    this.#lastSearches = [...filteredArray, processedLastSearch];
   }
 
   rerenderSearchList() {
     const searchList = this.#appTag.querySelector(".searches");
-    let innerMarkup;
+    const searchesLength = this.getLastSearches().length;
+    const searches = this.getLastSearches();
+    const isLengthMoreThanConst = searchesLength > SEARCHES_LENGTH;
 
-    if (this.getLastSearches().length > QUANTITY_SEARCHES_ITEMS) {
-      innerMarkup = this.makeListItemsMarkupFromArray(
-        this.getLastSearches().slice(
-          this.getLastSearches().length - QUANTITY_SEARCHES_ITEMS,
-          this.getLastSearches().length
-        )
+    if (isLengthMoreThanConst) {
+      const slicedSearches = this.getLastSearches().slice(
+        searchesLength - SEARCHES_LENGTH,
+        searchesLength
       );
-    }
-    if (this.getLastSearches().length <= QUANTITY_SEARCHES_ITEMS) {
-      innerMarkup = this.makeListItemsMarkupFromArray(this.getLastSearches());
+
+      searchList.innerHTML = this.makeListItemsMarkupFromArray(slicedSearches);
+      return;
     }
 
-    searchList.innerHTML = innerMarkup;
+    searchList.innerHTML = this.makeListItemsMarkupFromArray(searches);
   }
 
   debounce(func, msDelay) {
@@ -299,7 +331,10 @@ export class BeerFinder {
 
     mainTag.addEventListener("click", this.onNaviNextBtn.bind(this));
     mainTag.addEventListener("click", this.onNaviTopBtn.bind(this));
-    mainTag.addEventListener("click", this.onAddToFavouritesBtn.bind(this));
+    mainTag.addEventListener(
+      "click",
+      this.onAddOrRemoveToFavouritesBtn.bind(this)
+    );
     mainTag.addEventListener("click", this.onProductCard.bind(this));
   }
 
@@ -311,10 +346,10 @@ export class BeerFinder {
 
     switch (productListTitle) {
       case "Searching result:":
-        this.setPageNumber(this.getPageNumber() + 1);
-
+        const nextPageNumber = this.getPageNumber() + 1;
         const input = this.#appTag.querySelector("input.search__input");
 
+        this.setPageNumber(nextPageNumber);
         this.fetchData(input.value)
           .then((data) => {
             this.addProductsItems(data);
@@ -333,6 +368,7 @@ export class BeerFinder {
   onNaviTopBtn(event) {
     if (!event.target.classList.contains("navigation__top")) return;
     const firstProduct = this.#appTag.querySelector(".product__item");
+
     this.scrollToElement(firstProduct);
   }
 
@@ -353,9 +389,9 @@ export class BeerFinder {
 
   controlNaviTopBtnVisibility() {
     const naviTopBtn = this.#appTag.querySelector(".navigation__top");
-    const filstProduct = this.#appTag.querySelector(".product__item");
+    const firstProduct = this.#appTag.querySelector(".product__item");
 
-    this.isElemInViewport(filstProduct, true)
+    this.isElemInViewport(firstProduct, true)
       ? naviTopBtn.classList.add("hidden")
       : naviTopBtn.classList.remove("hidden");
   }
@@ -399,16 +435,19 @@ export class BeerFinder {
     );
   }
 
-  controlNaviNextBtnVisibility(param) {
-    this.fetchData(param, this.#pageNumber + 1)
+  controlNaviNextBtnVisibility(searchParam) {
+    const nextPage = this.#pageNumber + 1;
+    this.fetchData(searchParam, nextPage)
       .then((data) => {
-        if (
-          data.length === 0 &&
-          this.#appTag.querySelector(".navigation__next")
-        ) {
+        const isNextProducts = data.length !== 0;
+        const loadMoreBtn = this.#appTag.querySelector(".navigation__next");
+        const hideLoadMore = () =>
           this.#appTag
             .querySelector(".navigation__next")
             .classList.add("hidden");
+
+        if (!isNextProducts) {
+          hideLoadMore();
         }
       })
       .catch((error) => console.error(error));
@@ -428,50 +467,67 @@ export class BeerFinder {
     this.fetchData(input.value)
       .then((data) => {
         this.renderMainInnerMarkup(data);
-        if (data.length) {
-          this.addLastSearches(input.value);
-          this.rerenderSearchList();
-          this.controlNaviTopBtnVisibility();
+        if (!data.length) {
+          return;
         }
+
+        this.addLastSearches(input.value);
+        this.rerenderSearchList();
+        this.controlNaviTopBtnVisibility();
       })
       .catch((error) => console.error(error));
     this.controlNaviNextBtnVisibility(input.value);
   }
 
-  onAddToFavouritesBtn(event) {
-    const isButton = event.target.nodeName === "BUTTON";
-    if (!isButton) {
-      return;
-    }
-
+  onAddOrRemoveToFavouritesBtn(event) {
     const isAddBtn = "Add";
     const isRemoveBtn = "Remove";
 
-    switch (event.target.textContent) {
+    switch (event.target.textContent.trim()) {
       case isAddBtn:
-        event.target.classList.replace(
-          "product__button",
-          "product__button--red"
-        );
-        event.target.textContent = "Remove";
-        this.addToFavouriteIDs(event.target.dataset.id);
-        this.setNewQuantityOnFavouritesBtn();
-        return;
+        this.onAddBtn(event);
+        break;
 
       case isRemoveBtn:
-        event.target.classList.replace(
-          "product__button--red",
-          "product__button"
-        );
-        event.target.textContent = "Add";
-        this.setFavouriteIDs(
-          this.getFavouriteIDs().filter(
-            (elem) => elem !== event.target.dataset.id
-          )
-        );
-        this.setNewQuantityOnFavouritesBtn();
-        return;
+        this.onRemoveBtn(event);
+        break;
     }
+  }
+
+  onAddBtn(event) {
+    const isButton = event.target.nodeName === "BUTTON";
+    const isRemove = event.target.textContent === "Add";
+    if (!isButton && !isRemove) {
+      return;
+    }
+
+    this.addToFavouriteIDs(event.target.dataset.id);
+    setLocalStorage("favoriteIDs", this.getFavouriteIDs());
+    this.setNewQuantityOnFavouritesBtn();
+    this.changeBtnStatus();
+  }
+
+  onRemoveBtn(event) {
+    const isButton = event.target.nodeName === "BUTTON";
+    const isRemove = event.target.textContent === "Remove";
+    if (!isButton && !isRemove) {
+      return;
+    }
+
+    this.removeFromFavouriteIDs(event.target.dataset.id);
+    setLocalStorage("favoriteIDs", this.getFavouriteIDs());
+    this.setNewQuantityOnFavouritesBtn();
+    this.changeBtnStatus();
+  }
+
+  switchToAddBtn(element = event.target) {
+    element.classList.replace("product__button--red", "product__button");
+    element.textContent = "Add";
+  }
+
+  switchToRemoveBtn(element = event.target) {
+    element.classList.replace("product__button", "product__button--red");
+    element.textContent = "Remove";
   }
 
   getFavouriteIDs() {
@@ -482,13 +538,25 @@ export class BeerFinder {
     this.#favoriteIDs = [...this.#favoriteIDs, newID];
   }
 
-  getFavouriteIDsQuantity() {
+  removeFromFavouriteIDs(ID) {
+    if (this.#favoriteIDs.includes(ID) === -1) return;
+    const index = this.#favoriteIDs.indexOf(ID);
+
+    this.#favoriteIDs = [
+      ...this.#favoriteIDs.slice(0, index),
+      ...this.#favoriteIDs.slice(index + 1),
+    ];
+  }
+
+  getFavouritesQuantity() {
     return this.getFavouriteIDs().length;
   }
 
   setNewQuantityOnFavouritesBtn() {
-    const favourites = this.#appTag.querySelector(".button__favourites");
-    favourites.firstElementChild.textContent = this.getFavouriteIDsQuantity();
+    const favouritesQuantity = this.#appTag.querySelector(
+      ".button__favourites"
+    ).firstElementChild;
+    favouritesQuantity.textContent = this.getFavouritesQuantity();
   }
 
   setFavouriteIDs(IDs) {
@@ -505,7 +573,10 @@ export class BeerFinder {
 
     this.fetchIDs(ids)
       .then((data) => {
-        modalWindow.setContent(this.makeFavouritesMarkup(data));
+        const showModalWithFavourites = () =>
+          modalWindow.setContent(this.makeFavouritesMarkup(data));
+
+        showModalWithFavourites();
 
         const favourites = document.querySelector(".favourites__list");
         const modalClose = document.querySelector(".modal__close");
@@ -537,7 +608,7 @@ export class BeerFinder {
       .map(
         (elem) => `<li class="favourites__item">
       <h3 class="favourites__name" data-id="${elem.id}">${elem.name}</h3>
-      <button type="button" class="btn favourites__remove" data-id="${elem.id}">Remove</button>
+      ${this.makeAddOrRemoveBtn(elem.id)}
       </li>`
       )
       .join("");
@@ -547,32 +618,22 @@ export class BeerFinder {
   }
 
   onFavouritesRemoveBtn(event) {
-    const isButton = event.target.nodeName === "BUTTON";
-    const isRemove = event.target.textContent === "Remove";
-    if (!isButton && !isRemove) {
-      return;
-    }
-
     const currentID = event.target.dataset.id;
-    const element = this.#appTag.querySelector(
-      `button[data-id='${currentID}']`
-    );
-
-    element.classList.replace("product__button--red", "product__button");
-    element.textContent = "Add";
-
-    this.setFavouriteIDs(
-      this.getFavouriteIDs().filter((elem) => elem !== event.target.dataset.id)
-    );
-    this.setNewQuantityOnFavouritesBtn();
-
+    this.changeBtnStatus(currentID);
+    this.onRemoveBtn(event);
     event.target.parentNode.remove();
   }
 
   onProductCard(event) {
     const onAddRemoveBtnClick = event.target.hasAttribute("data-id");
-    if (onAddRemoveBtnClick) return;
-    if (event.target.classList.contains("product__list")) return;
+
+    if (
+      onAddRemoveBtnClick ||
+      event.target.classList.contains("product__list") ||
+      event.target.classList.contains("navigation") ||
+      event.target.classList.contains("navigation__next")
+    )
+      return;
 
     const productID = this.getProductCardId(event);
 
@@ -581,22 +642,24 @@ export class BeerFinder {
 
     this.fetchIDs(productID)
       .then((data) => {
-        modalWindow.setContent(this.makeProductCardMarkup(...data));
+        const showModalWithSingleProduct = () =>
+          modalWindow.setContent(this.makeProductCardMarkup(...data));
 
+        showModalWithSingleProduct();
         const modalClose = document.querySelector(".modal__close");
         const backdrop = document.querySelector(".backdrop");
         const singleProduct = document.querySelector(".sproduct__content");
-        const addRemoveBtn = singleProduct.querySelector(".product__button");
-
-        if (this.getFavouriteIDs().includes(productID)) {
-          addRemoveBtn.classList.add("product__button--red");
-          addRemoveBtn.textContent = "Remove";
-        }
+        const addRemoveBtn = singleProduct.querySelector(
+          '[class*="product__button"]'
+        );
 
         modalClose.addEventListener("click", this.onModalClose);
         document.addEventListener("keydown", this.onModalActiveEscape);
         backdrop.addEventListener("click", this.onModalActiveBackdrop);
-        addRemoveBtn.addEventListener("click", this.onAddRemoveBtn.bind(this));
+        addRemoveBtn.addEventListener(
+          "click",
+          this.onSingleProductAddRemoveBtn.bind(this)
+        );
       })
       .catch((error) => console.error(error));
   }
@@ -628,7 +691,7 @@ export class BeerFinder {
       <h2 class="card__title">Product Information:</h2>
       <div class="sproduct">
         <img class="sproduct__image" src="${
-          prod.image_url === null ? "./bottle.jpg" : prod.image_url
+          prod.image_url === null ? "./bottle.png" : prod.image_url
         } " alt="${prod.name}" width="50px"/>
         <div class="sproduct__content">
           <h3 class="sproduct__title">
@@ -645,9 +708,7 @@ export class BeerFinder {
             </ul>
           </div>
           <p class="sproduct__desc"> ${prod.description}</p>
-          <button type="button" class="btn product__button" data-id='${
-            prod.id
-          }'>Add</button>
+          ${this.makeAddOrRemoveBtn(prod.id)}
         </div>
       </div>
       </div>
@@ -669,47 +730,35 @@ export class BeerFinder {
     document.querySelector(".backdrop").remove();
   }
 
-  onAddRemoveBtn(event) {
+  onSingleProductAddRemoveBtn(event) {
     const productID = event.target.dataset.id;
-    const isRemoveBtn = event.target.classList.contains("product__button--red");
 
-    switch (isRemoveBtn) {
-      case true:
-        event.target.classList.remove("product__button--red");
-        event.target.classList.add("product__button");
-        event.target.textContent = "Add";
-        this.setFavouriteIDs(
-          this.getFavouriteIDs().filter((elem) => elem !== productID)
-        );
-        this.setNewQuantityOnFavouritesBtn();
-        break;
+    this.onAddOrRemoveToFavouritesBtn(event);
+    this.changeBtnStatus(productID);
+  }
 
-      case false:
-        event.target.classList.add("product__button--red");
-        event.target.classList.remove("product__button");
-        event.target.textContent = "Remove";
-        this.addToFavouriteIDs(productID);
-        this.setNewQuantityOnFavouritesBtn();
+  setLastSearches(array) {
+    this.#lastSearches = [...array];
+  }
 
-        break;
-    }
-    const products = this.#appTag.querySelector(".product__list");
-    const productAddRemoveBtn = products.querySelector(
-      `[data-id="${productID}"]`
+  changeBtnStatus(ID = event.target.dataset.id) {
+    const buttonsWithID = this.#appTag.querySelectorAll(
+      `button[data-id='${ID}']`
     );
-    const isRemoveProductBtn = productAddRemoveBtn.classList.contains(
-      "product__button--red"
-    );
+    const isIDinFavourites = this.checkProductOnFavourites(ID);
 
-    switch (isRemoveProductBtn) {
-      case true:
-        productAddRemoveBtn.classList.remove("product__button--red");
-        productAddRemoveBtn.textContent = "Add";
-        break;
-      case false:
-        productAddRemoveBtn.classList.add("product__button--red");
-        productAddRemoveBtn.textContent = "Remove";
-        break;
+    if (!buttonsWithID) {
+      return;
     }
+
+    buttonsWithID.forEach((button) =>
+      isIDinFavourites
+        ? this.switchToRemoveBtn(button)
+        : this.switchToAddBtn(button)
+    );
+  }
+
+  checkProductOnFavourites(ID) {
+    return this.getFavouriteIDs().includes(ID.toString());
   }
 }
