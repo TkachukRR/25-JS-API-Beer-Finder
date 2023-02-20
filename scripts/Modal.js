@@ -18,7 +18,9 @@ export class Modal {
 
   addToPageEnd(innerMarkup) {
     const modal = this.makeMarkup(innerMarkup);
-    document.querySelector("body").insertAdjacentHTML("beforeend", modal);
+    document
+      .querySelector("#beerFinder")
+      .insertAdjacentHTML("beforeend", modal);
   }
 
   show() {

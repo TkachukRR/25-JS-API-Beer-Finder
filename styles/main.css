@@ -9,7 +9,7 @@
 .container {
   margin: 0 auto;
   width: 1200px;
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(255, 255, 255, 0.85);
   min-height: 100vh;
   position: relative;
   border-radius: 8px;
@@ -47,22 +47,26 @@
 
 .header {
   position: relative;
-  display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.5);
-  margin-bottom: 20px;
-  padding: 20px;
 }
 .header :nth-child(2) {
-  align-self: stretch;
+  align-self: flex-end;
 }
 .header__title {
   text-align: center;
   margin-bottom: 15px;
-  content: url("./../beerfinder.png");
-  height: 120px;
-  width: 120px;
+  font-size: 42px;
+  letter-spacing: 45px;
+  padding: 30px 0;
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.button__favourites {
+  position: absolute;
+  right: 20px;
+  top: 130px;
 }
 
 .search {
@@ -73,6 +77,7 @@
   margin-bottom: 15px;
 }
 .search__input {
+  min-width: 500px;
   padding: 5px;
   padding-right: 31px;
   font-size: 16px;
@@ -376,9 +381,9 @@
 }
 
 body {
-  background-image: url("./../bg2.jpg");
+  background-image: url("./../bg4.jpg");
   background-position: 50% 50%;
-  background-repeat: no-repeat;
-  background-size: cover;
+  background-repeat: repeat;
+  background-size: 800px;
   background-attachment: fixed;
 }/*# sourceMappingURL=main.css.map */
