@@ -5,12 +5,14 @@ import {
   SEARCH_FORM_PLACEHOLDER,
   SEARCH_VALID_LENGTH,
   BASE_URL,
+  BASE_ROOT,
   BASE_SEARCH_PARAM,
   ERROR_MSG,
   NAVI_BTN_NEXT_NAME,
   PRODUCT_PER_PAGE,
   NAVI_BTN_TOP_NAME,
   SEARCHES_LENGTH,
+  FOOTER_SLOGAN,
 } from "./constants.js";
 import { Modal } from "./Modal.js";
 import { getLocalStorage, setLocalStorage } from "./localStorage.js";
@@ -21,14 +23,18 @@ export class BeerFinder {
   #pageNumber = 1;
   #favoriteIDs = [];
 
-  constructor() {
-    this.#appTag = document.querySelector("#beerFinder");
+  constructor(tagID) {
+    this.#appTag = document.querySelector(tagID);
     const isLocalStorageContainsSearches = getLocalStorage("searches");
     const isLocalStorageContainsFavoriteIDs = getLocalStorage("favoriteIDs");
     const setFromLocalStorageSearches = () =>
       this.setLastSearches(getLocalStorage("searches"));
     const setFromLocalStorageFavouriteIDs = () =>
       this.setFavouriteIDs(getLocalStorage("favoriteIDs"));
+    const debouncedSetNaviTopBtnVisibility = this.debounce(
+      this.controlNaviTopBtnVisibility.bind(this),
+      100
+    );
 
     if (isLocalStorageContainsSearches) {
       setFromLocalStorageSearches();
@@ -43,19 +49,14 @@ export class BeerFinder {
 
     this.fetchRandomElement()
       .then((randomElement) => {
-        this.renderMainInnerMarkup(randomElement, "Random products:");
+        this.rerenderMainInnerMarkup(randomElement, "Random products:");
 
         this.controlNaviTopBtnVisibility();
       })
       .catch((error) => console.error(error));
 
-    this.addRandomProductItems(PRODUCT_PER_PAGE);
+    this.insertRandomProductItems(PRODUCT_PER_PAGE);
     this.addMainListeners();
-
-    const debouncedSetNaviTopBtnVisibility = this.debounce(
-      this.controlNaviTopBtnVisibility.bind(this),
-      100
-    );
 
     document.addEventListener("scroll", debouncedSetNaviTopBtnVisibility);
   }
@@ -63,17 +64,83 @@ export class BeerFinder {
   renderApp() {
     const headerMarkup = this.makeHeaderMarkup();
     const mainMarkup = this.makeMainMarkup();
+    const footerMarkup = this.makeFooterMarkup();
 
     this.#appTag.insertAdjacentHTML("beforeend", headerMarkup);
     this.#appTag.insertAdjacentHTML("beforeend", mainMarkup);
+    this.#appTag.insertAdjacentHTML("beforeend", footerMarkup);
+  }
+
+  rerenderMainInnerMarkup(products, productsTitle) {
+    const mainTag = this.#appTag.querySelector(".main");
+    const productItemsMarkup = this.makeProductItemMarkup(products);
+    const innerMarkup = this.makeProductsMarkup(
+      productItemsMarkup,
+      productsTitle
+    );
+    mainTag.innerHTML = innerMarkup;
+
+    if (!products.length) return;
+
+    const navigation = this.makeNavigationMarkup();
+
+    mainTag.insertAdjacentHTML("beforeend", navigation);
+  }
+
+  rerenderSearchList() {
+    const searchList = this.#appTag.querySelector(".searches");
+    const searchesLength = this.getLastSearches().length;
+    const searches = this.getLastSearches();
+    const isLengthMoreThanConst = searchesLength > SEARCHES_LENGTH;
+
+    if (isLengthMoreThanConst) {
+      const slicedSearches = this.getLastSearches().slice(
+        searchesLength - SEARCHES_LENGTH,
+        searchesLength
+      );
+
+      searchList.innerHTML = this.makeLastSearchesItemsMarkup(slicedSearches);
+      return;
+    }
+
+    searchList.innerHTML = this.makeLastSearchesItemsMarkup(searches);
+  }
+
+  addHeaderListeners() {
+    const searchForm = this.#appTag.querySelector(".search");
+    const onInputChangeDebounced = this.debounce(this.onInputChange, 250);
+    const lastSearches = this.#appTag.querySelector(".searches");
+    const favouritesBtn = this.#appTag.querySelector(".button__favourites");
+
+    searchForm.addEventListener("input", onInputChangeDebounced.bind(this));
+    searchForm.addEventListener("click", this.onSearchButton.bind(this));
+    lastSearches.addEventListener(
+      "click",
+      this.onLastSearchesButton.bind(this)
+    );
+    favouritesBtn.addEventListener("click", this.onFavouritesBtn.bind(this));
+  }
+
+  addMainListeners() {
+    const mainTag = this.#appTag.querySelector(".main");
+
+    mainTag.addEventListener("click", this.onNaviNextBtn.bind(this));
+    mainTag.addEventListener("click", this.onNaviTopBtn.bind(this));
+    mainTag.addEventListener(
+      "click",
+      this.onAddOrRemoveToFavouritesBtn.bind(this)
+    );
+    mainTag.addEventListener("click", this.onProductsItem.bind(this));
   }
 
   makeHeaderMarkup() {
     return `
     <header class="header">
-        ${this.makeHeaderTitleMarkup()}
+      ${this.makeHeaderTitleMarkup()}
+      <div class="container">
         ${this.makeSearchFormMarkup()}
         ${this.makeFavouritesButtonMarkup(HEADER_BTN_FAVOURITES)}
+      </div>
     </header>
     `;
   }
@@ -86,12 +153,12 @@ export class BeerFinder {
     return `
       <button type="button" class="btn button__favourites">
         Favourites
-        <span class="quantity">${this.getFavouritesQuantity()}</span>
+        <span class="quantity">${this.getFavouriteIDsQuantity()}</span>
       </button>`;
   }
 
   makeSearchFormMarkup() {
-    const searchesMarkup = this.makeListItemsMarkupFromArray(
+    const searchesMarkup = this.makeLastSearchesItemsMarkup(
       this.getLastSearches()
     );
     return `
@@ -109,8 +176,8 @@ export class BeerFinder {
     `;
   }
 
-  makeListItemsMarkupFromArray(array) {
-    return array
+  makeLastSearchesItemsMarkup(lastSearches) {
+    return lastSearches
       .map(
         (item) => `
       <li class="searches__item">
@@ -120,90 +187,12 @@ export class BeerFinder {
       .join("");
   }
 
-  addHeaderListeners() {
-    const searchForm = this.#appTag.querySelector(".search");
-    const onInputChangeDebounced = this.debounce(this.onInputChange, 250);
-    const searches = this.#appTag.querySelector(".searches");
-    const favouritesBtn = this.#appTag.querySelector(".button__favourites");
+  makeMainMarkup(innerMarkup = this.makeProductsMarkup()) {
+    return `
+    <main class="main">
 
-    searchForm.addEventListener("input", onInputChangeDebounced.bind(this));
-    searchForm.addEventListener("click", this.onSearchButton.bind(this));
-    searches.addEventListener("click", this.onSearchesButton.bind(this));
-    favouritesBtn.addEventListener("click", this.onFavouritesBtn.bind(this));
-  }
-
-  onInputChange(event) {
-    if (event.target.nodeName !== "INPUT") return;
-    const input = this.#appTag.querySelector("input.search__input");
-    const isInvalid = !this.validationLength(input.value.length);
-
-    if (isInvalid) {
-      input.classList.add("bordered--red");
-      return;
-    }
-    input.classList.remove("bordered--red");
-
-    this.fetchData(input.value)
-      .then((data) => {
-        this.renderMainInnerMarkup(data);
-        if (!data.length) {
-          return;
-        }
-
-        this.addLastSearches(input.value);
-        setLocalStorage("searches", this.getLastSearches());
-        this.rerenderSearchList();
-        this.controlNaviTopBtnVisibility();
-      })
-      .catch((error) => console.error(error));
-    this.controlNaviNextBtnVisibility(input.value);
-  }
-
-  onSearchButton(event) {
-    if (event.target.nodeName !== "BUTTON") return;
-    event.preventDefault();
-    const input = this.#appTag.querySelector("input.search__input");
-    const isInvalid = !this.validationLength(input.value.length);
-    if (isInvalid) {
-      input.classList.add("bordered--red");
-      return;
-    }
-    input.classList.remove("bordered--red");
-
-    this.fetchData(input.value)
-      .then((data) => {
-        this.renderMainInnerMarkup(data);
-
-        if (!data.length) {
-          return;
-        }
-
-        this.addLastSearches(input.value);
-        setLocalStorage("searches", this.getLastSearches());
-        this.rerenderSearchList();
-        this.controlNaviTopBtnVisibility();
-      })
-      .catch((error) => console.error(error));
-    this.controlNaviNextBtnVisibility(input.value);
-  }
-
-  validationLength(length) {
-    return length >= SEARCH_VALID_LENGTH;
-  }
-
-  fetchData(param, pageNumber = this.#pageNumber) {
-    return fetch(
-      `${BASE_URL}/v2/beers?page=${pageNumber}&per_page=${PRODUCT_PER_PAGE}&${BASE_SEARCH_PARAM}=${param}`
-    ).then((response) => {
-      if (!response.ok) {
-        throw new Error(response.status);
-      }
-      return response.json();
-    });
-  }
-
-  makeMainMarkup(innerMarkup = "") {
-    return `<main class="main">${innerMarkup}</main>`;
+      ${innerMarkup}
+    </main>`;
   }
 
   makeProductsMarkup(productItemsMarkup, productsTitle = "") {
@@ -212,12 +201,14 @@ export class BeerFinder {
     }
 
     return `
+    <div class="container">
       <h2 class="products__title">${
         productsTitle.length ? productsTitle : "Searching result:"
       }</h2>
       <ul class="product__list">
         ${productItemsMarkup}
-      </ul>`;
+      </ul>
+    </div>`;
   }
 
   makeProductItemMarkup(products) {
@@ -247,95 +238,128 @@ export class BeerFinder {
 
   makeAddOrRemoveBtn(id) {
     return `<button type="button" class="btn ${
-      this.checkProductOnFavourites(id)
+      this.isFavouritesIncludesProduct(id)
         ? "product__button--red"
         : "product__button"
     }" data-id='${id}'>
-    ${this.checkProductOnFavourites(id) ? "Remove" : "Add"}
+    ${this.isFavouritesIncludesProduct(id) ? "Remove" : "Add"}
     </button>`;
-  }
-
-  renderMainInnerMarkup(products, productsTitle) {
-    const mainTag = this.#appTag.querySelector(".main");
-    const innerMarkup = this.makeProductsMarkup(
-      this.makeProductItemMarkup(products),
-      productsTitle
-    );
-    mainTag.innerHTML = innerMarkup;
-
-    if (!products.length) return;
-
-    const navigation = this.makeNavigationMarkup();
-
-    mainTag.insertAdjacentHTML("beforeend", navigation);
-  }
-
-  getLastSearches() {
-    return this.#lastSearches;
-  }
-
-  addLastSearches(lastSearch) {
-    const processedLastSearch = lastSearch.trim().toLowerCase();
-
-    let filteredArray = [];
-    filteredArray = this.getLastSearches().filter(
-      (elem) => elem !== processedLastSearch
-    );
-    this.#lastSearches = [...filteredArray, processedLastSearch];
-  }
-
-  rerenderSearchList() {
-    const searchList = this.#appTag.querySelector(".searches");
-    const searchesLength = this.getLastSearches().length;
-    const searches = this.getLastSearches();
-    const isLengthMoreThanConst = searchesLength > SEARCHES_LENGTH;
-
-    if (isLengthMoreThanConst) {
-      const slicedSearches = this.getLastSearches().slice(
-        searchesLength - SEARCHES_LENGTH,
-        searchesLength
-      );
-
-      searchList.innerHTML = this.makeListItemsMarkupFromArray(slicedSearches);
-      return;
-    }
-
-    searchList.innerHTML = this.makeListItemsMarkupFromArray(searches);
-  }
-
-  debounce(func, msDelay) {
-    let timeout;
-
-    return function () {
-      const fnCall = () => {
-        func.apply(this, arguments);
-      };
-
-      clearTimeout(timeout);
-
-      timeout = setTimeout(fnCall, msDelay);
-    };
   }
 
   makeNavigationMarkup() {
     return `
-    <nav class="navigation">
-      <button type="button" class="btn navigation__next">${NAVI_BTN_NEXT_NAME}</button>
-      <button type="button" class="btn navigation__top">${NAVI_BTN_TOP_NAME}</button>
-    </nav>
+    <div class="container">
+      <nav class="navigation">
+        <button type="button" class="btn navigation__next">${NAVI_BTN_NEXT_NAME}</button>
+        <button type="button" class="btn navigation__top">${NAVI_BTN_TOP_NAME}</button>
+      </nav>
+    </div>`;
+  }
+
+  makeProductCardMarkup(prod) {
+    return `
+    <div class="card">
+      <h2 class="card__title">Product Information:</h2>
+      <div class="sproduct">
+        <img class="sproduct__image" src="${
+          prod.image_url === null ? "./bottle.png" : prod.image_url
+        } " alt="${prod.name}" width="50px"/>
+        <div class="sproduct__content">
+          <h3 class="sproduct__title">
+            ${prod.name} 
+            - 
+            <span class="sproduct__tagline">${prod.tagline}</span>
+          </h3>
+          <p class="sproduct__brewed">First brewed: ${prod.first_brewed}</p>
+          <p class="sproduct__abv">Alcohol by volume: ${prod.abv}%</p>
+          <div class="sproduct__pairing">
+            <p>Food pairing:</p> 
+            <ul>
+            ${prod.food_pairing.map((elem) => `<li>${elem}</li>`).join("")}
+            </ul>
+          </div>
+          <p class="sproduct__desc"> ${prod.description}</p>
+          ${this.makeAddOrRemoveBtn(prod.id)}
+        </div>
+      </div>
+      </div>
     `;
   }
 
-  addMainListeners() {
-    const mainTag = this.#appTag.querySelector(".main");
+  makeFavouritesMarkup(array) {
+    const items = array
+      .map(
+        (elem) => `<li class="favourites__item">
+      <h3 class="favourites__name" data-id="${elem.id}">${elem.name}</h3>
+      ${this.makeAddOrRemoveBtn(elem.id)}
+      </li>`
+      )
+      .join("");
+    return `
+    <h2 class="favourites__title">favourites</h2>
+    <ul class="favourites__list">${items}</ul>`;
+  }
 
-    mainTag.addEventListener("click", this.onNaviNextBtn.bind(this));
-    mainTag.addEventListener("click", this.onNaviTopBtn.bind(this));
-    mainTag.addEventListener(
-      "click",
-      this.onAddOrRemoveToFavouritesBtn.bind(this)
-    );
-    mainTag.addEventListener("click", this.onProductCard.bind(this));
+  makeFooterMarkup() {
+    return `<footer class="footer">
+      <h2 class="footer__slogan">${FOOTER_SLOGAN}</h2>
+    </footer>
+    `;
+  }
+
+  onInputChange(event) {
+    if (event.target.nodeName !== "INPUT") return;
+    const input = this.#appTag.querySelector("input.search__input");
+    const isInvalid = !this.validationLength(input.value.length);
+
+    if (isInvalid) {
+      input.classList.add("bordered--red");
+      return;
+    }
+    input.classList.remove("bordered--red");
+
+    this.fetchData(input.value)
+      .then((data) => {
+        this.rerenderMainInnerMarkup(data);
+        if (!data.length) {
+          return;
+        }
+
+        this.addLastSearches(input.value);
+        setLocalStorage("searches", this.getLastSearches());
+        this.rerenderSearchList();
+        this.controlNaviTopBtnVisibility();
+      })
+      .catch((error) => console.error(error));
+    this.controlNaviNextBtnVisibility(input.value);
+  }
+
+  onSearchButton(event) {
+    if (event.target.nodeName !== "BUTTON") return;
+    event.preventDefault();
+    const input = this.#appTag.querySelector("input.search__input");
+    const isInvalid = !this.validationLength(input.value.length);
+    if (isInvalid) {
+      input.classList.add("bordered--red");
+      return;
+    }
+    input.classList.remove("bordered--red");
+
+    this.fetchData(input.value)
+      .then((data) => {
+        this.rerenderMainInnerMarkup(data);
+
+        if (!data.length) {
+          return;
+        }
+
+        this.addLastSearches(input.value);
+        setLocalStorage("searches", this.getLastSearches());
+        this.rerenderSearchList();
+        this.controlNaviTopBtnVisibility();
+      })
+      .catch((error) => console.error(error));
+    this.controlNaviNextBtnVisibility(input.value);
   }
 
   onNaviNextBtn(event) {
@@ -352,7 +376,7 @@ export class BeerFinder {
         this.setPageNumber(nextPageNumber);
         this.fetchData(input.value)
           .then((data) => {
-            this.addProductsItems(data);
+            this.insertProductItems(data);
           })
           .catch((error) => console.error(error));
 
@@ -360,7 +384,7 @@ export class BeerFinder {
         break;
 
       case "Random products:":
-        this.addRandomProductItems(PRODUCT_PER_PAGE + 1);
+        this.insertRandomProductItems(PRODUCT_PER_PAGE + 1);
         break;
     }
   }
@@ -372,92 +396,36 @@ export class BeerFinder {
     this.scrollToElement(firstProduct);
   }
 
-  getPageNumber() {
-    return this.#pageNumber;
-  }
+  onFavouritesBtn() {
+    if (!this.getFavouriteIDs().length) return;
 
-  setPageNumber(newNumber) {
-    this.#pageNumber = newNumber;
-  }
+    const modalWindow = new Modal();
+    modalWindow.show();
 
-  addProductsItems(data) {
-    const products = this.#appTag.querySelector(".product__list");
-    const newItems = this.makeProductItemMarkup(data);
+    const ids = this.getFavouriteIDs().join("|");
 
-    products.insertAdjacentHTML("beforeend", newItems);
-  }
-
-  controlNaviTopBtnVisibility() {
-    const naviTopBtn = this.#appTag.querySelector(".navigation__top");
-    const firstProduct = this.#appTag.querySelector(".product__item");
-
-    this.isElemInViewport(firstProduct, true)
-      ? naviTopBtn.classList.add("hidden")
-      : naviTopBtn.classList.remove("hidden");
-  }
-
-  fetchRandomElement() {
-    return fetch(`${BASE_URL}/v2/beers/random`).then((response) => {
-      if (!response.ok) {
-        throw new Error(response.status);
-      }
-      return response.json();
-    });
-  }
-
-  addRandomProductItems(quantity) {
-    for (let i = 1; i < quantity; i++) {
-      this.fetchRandomElement()
-        .then((randomElement) => {
-          this.addProductsItems(randomElement);
-        })
-        .catch((error) => console.error(error));
-    }
-  }
-
-  isElemInViewport(elem, full) {
-    const box = elem.getBoundingClientRect();
-    const top = box.top;
-    const left = box.left;
-    const bottom = box.bottom;
-    const right = box.right;
-    const width = document.documentElement.clientWidth;
-    const height = document.documentElement.clientHeight;
-    let maxWidth = 0;
-    let maxHeight = 0;
-    if (full) {
-      maxWidth = right - left;
-      maxHeight = bottom - top;
-    }
-    return (
-      Math.min(height, bottom) - Math.max(0, top) >= maxHeight &&
-      Math.min(width, right) - Math.max(0, left) >= maxWidth
-    );
-  }
-
-  controlNaviNextBtnVisibility(searchParam) {
-    const nextPage = this.#pageNumber + 1;
-    this.fetchData(searchParam, nextPage)
+    this.fetchIDs(ids)
       .then((data) => {
-        const isNextProducts = data.length !== 0;
-        const loadMoreBtn = this.#appTag.querySelector(".navigation__next");
-        const hideLoadMore = () =>
-          this.#appTag
-            .querySelector(".navigation__next")
-            .classList.add("hidden");
+        const showModalWithFavourites = () =>
+          modalWindow.setContent(this.makeFavouritesMarkup(data));
 
-        if (!isNextProducts) {
-          hideLoadMore();
-        }
+        showModalWithFavourites();
+
+        const favourites = document.querySelector(".favourites__list");
+        const modalClose = document.querySelector(".modal__close");
+        const backdrop = document.querySelector(".backdrop");
+
+        favourites.addEventListener(
+          "click",
+          this.onFavouritesRemoveBtn.bind(this)
+        );
+        modalClose.addEventListener("click", this.onModalClose);
+        backdrop.addEventListener("click", this.onModalActiveBackdrop);
       })
       .catch((error) => console.error(error));
   }
 
-  scrollToElement(element) {
-    element.scrollIntoView();
-  }
-
-  onSearchesButton(event) {
+  onLastSearchesButton(event) {
     if (event.target.nodeName !== "BUTTON") return;
 
     const input = this.#appTag.querySelector(".search__input");
@@ -466,7 +434,7 @@ export class BeerFinder {
 
     this.fetchData(input.value)
       .then((data) => {
-        this.renderMainInnerMarkup(data);
+        this.rerenderMainInnerMarkup(data);
         if (!data.length) {
           return;
         }
@@ -520,103 +488,6 @@ export class BeerFinder {
     this.changeBtnStatus();
   }
 
-  switchToAddBtn(element = event.target) {
-    element.classList.replace("product__button--red", "product__button");
-    element.textContent = "Add";
-  }
-
-  switchToRemoveBtn(element = event.target) {
-    element.classList.replace("product__button", "product__button--red");
-    element.textContent = "Remove";
-  }
-
-  getFavouriteIDs() {
-    return this.#favoriteIDs;
-  }
-
-  addToFavouriteIDs(newID) {
-    this.#favoriteIDs = [...this.#favoriteIDs, newID];
-  }
-
-  removeFromFavouriteIDs(ID) {
-    if (this.#favoriteIDs.includes(ID) === -1) return;
-    const index = this.#favoriteIDs.indexOf(ID);
-
-    this.#favoriteIDs = [
-      ...this.#favoriteIDs.slice(0, index),
-      ...this.#favoriteIDs.slice(index + 1),
-    ];
-  }
-
-  getFavouritesQuantity() {
-    return this.getFavouriteIDs().length;
-  }
-
-  setNewQuantityOnFavouritesBtn() {
-    const favouritesQuantity = this.#appTag.querySelector(
-      ".button__favourites"
-    ).firstElementChild;
-    favouritesQuantity.textContent = this.getFavouritesQuantity();
-  }
-
-  setFavouriteIDs(IDs) {
-    this.#favoriteIDs = [...IDs];
-  }
-
-  onFavouritesBtn() {
-    if (!this.getFavouriteIDs().length) return;
-
-    const modalWindow = new Modal();
-    modalWindow.show();
-
-    const ids = this.getFavouriteIDs().join("|");
-
-    this.fetchIDs(ids)
-      .then((data) => {
-        const showModalWithFavourites = () =>
-          modalWindow.setContent(this.makeFavouritesMarkup(data));
-
-        showModalWithFavourites();
-
-        const favourites = document.querySelector(".favourites__list");
-        const modalClose = document.querySelector(".modal__close");
-        const backdrop = document.querySelector(".backdrop");
-
-        favourites.addEventListener(
-          "click",
-          this.onFavouritesRemoveBtn.bind(this)
-        );
-        modalClose.addEventListener("click", this.onModalClose);
-        backdrop.addEventListener("click", this.onModalActiveBackdrop);
-      })
-      .catch((error) => console.error(error));
-  }
-
-  fetchIDs(ids) {
-    return fetch(`https://api.punkapi.com/v2/beers?ids=${ids}`).then(
-      (response) => {
-        if (!response.ok) {
-          throw new Error(response.status);
-        }
-        return response.json();
-      }
-    );
-  }
-
-  makeFavouritesMarkup(array) {
-    const items = array
-      .map(
-        (elem) => `<li class="favourites__item">
-      <h3 class="favourites__name" data-id="${elem.id}">${elem.name}</h3>
-      ${this.makeAddOrRemoveBtn(elem.id)}
-      </li>`
-      )
-      .join("");
-    return `
-    <h2 class="favourites__title">favourites</h2>
-    <ul class="favourites__list">${items}</ul>`;
-  }
-
   onFavouritesRemoveBtn(event) {
     const currentID = event.target.dataset.id;
     this.changeBtnStatus(currentID);
@@ -624,7 +495,7 @@ export class BeerFinder {
     event.target.parentNode.remove();
   }
 
-  onProductCard(event) {
+  onProductsItem(event) {
     const onAddRemoveBtnClick = event.target.hasAttribute("data-id");
 
     if (
@@ -664,6 +535,170 @@ export class BeerFinder {
       .catch((error) => console.error(error));
   }
 
+  onSingleProductAddRemoveBtn(event) {
+    const productID = event.target.dataset.id;
+
+    this.onAddOrRemoveToFavouritesBtn(event);
+    this.changeBtnStatus(productID);
+  }
+
+  onModalClose() {
+    document.querySelector(".backdrop").remove();
+  }
+
+  onModalActiveEscape(event) {
+    if (!this.#appTag.querySelector(".modal")) return;
+    if (event.code !== "Escape") return;
+    document.querySelector(".backdrop").remove();
+  }
+
+  onModalActiveBackdrop(event) {
+    if (event.currentTarget !== event.target) return;
+    document.querySelector(".backdrop").remove();
+  }
+
+  fetchData(param, pageNumber = this.#pageNumber) {
+    return fetch(
+      `${BASE_URL}${BASE_ROOT}?page=${pageNumber}&per_page=${PRODUCT_PER_PAGE}&${BASE_SEARCH_PARAM}=${param}`
+    ).then((response) => {
+      if (!response.ok) {
+        throw new Error(response.status);
+      }
+      return response.json();
+    });
+  }
+
+  fetchIDs(ids) {
+    return fetch(`${BASE_URL}${BASE_ROOT}?ids=${ids}`).then((response) => {
+      if (!response.ok) {
+        throw new Error(response.status);
+      }
+      return response.json();
+    });
+  }
+
+  fetchRandomElement() {
+    return fetch(`${BASE_URL}${BASE_ROOT}/random`).then((response) => {
+      if (!response.ok) {
+        throw new Error(response.status);
+      }
+      return response.json();
+    });
+  }
+
+  getLastSearches() {
+    return this.#lastSearches;
+  }
+
+  setLastSearches(array) {
+    this.#lastSearches = [...array];
+  }
+
+  addLastSearches(lastSearch) {
+    const processedLastSearch = lastSearch.trim().toLowerCase();
+
+    let filteredArray = [];
+    filteredArray = this.getLastSearches().filter(
+      (elem) => elem !== processedLastSearch
+    );
+    this.#lastSearches = [...filteredArray, processedLastSearch];
+  }
+
+  insertProductItems(data) {
+    const products = this.#appTag.querySelector(".product__list");
+    const newItems = this.makeProductItemMarkup(data);
+
+    products.insertAdjacentHTML("beforeend", newItems);
+  }
+
+  insertRandomProductItems(quantity) {
+    for (let i = 1; i < quantity; i++) {
+      this.fetchRandomElement()
+        .then((randomElement) => {
+          this.insertProductItems(randomElement);
+        })
+        .catch((error) => console.error(error));
+    }
+  }
+
+  getPageNumber() {
+    return this.#pageNumber;
+  }
+
+  setPageNumber(newNumber) {
+    this.#pageNumber = newNumber;
+  }
+
+  setFavouriteIDs(IDs) {
+    this.#favoriteIDs = [...IDs];
+  }
+
+  getFavouriteIDs() {
+    return this.#favoriteIDs;
+  }
+
+  addToFavouriteIDs(newID) {
+    this.#favoriteIDs = [...this.#favoriteIDs, newID];
+  }
+
+  removeFromFavouriteIDs(ID) {
+    if (this.#favoriteIDs.includes(ID) === -1) return;
+    const index = this.#favoriteIDs.indexOf(ID);
+
+    this.#favoriteIDs = [
+      ...this.#favoriteIDs.slice(0, index),
+      ...this.#favoriteIDs.slice(index + 1),
+    ];
+  }
+
+  getFavouriteIDsQuantity() {
+    return this.getFavouriteIDs().length;
+  }
+
+  controlNaviTopBtnVisibility() {
+    const naviTopBtn = this.#appTag.querySelector(".navigation__top");
+    const firstProduct = this.#appTag.querySelector(".product__item");
+
+    this.isElemInViewport(firstProduct, true)
+      ? naviTopBtn.classList.add("hidden")
+      : naviTopBtn.classList.remove("hidden");
+  }
+
+  controlNaviNextBtnVisibility(searchParam) {
+    const nextPage = this.#pageNumber + 1;
+    this.fetchData(searchParam, nextPage)
+      .then((data) => {
+        const isNextProducts = data.length !== 0;
+        const loadMoreBtn = this.#appTag.querySelector(".navigation__next");
+        const hideLoadMore = () =>
+          this.#appTag
+            .querySelector(".navigation__next")
+            .classList.add("hidden");
+
+        if (!isNextProducts) {
+          hideLoadMore();
+        }
+      })
+      .catch((error) => console.error(error));
+  }
+
+  switchToAddBtn(element = event.target) {
+    element.classList.replace("product__button--red", "product__button");
+    element.textContent = "Add";
+  }
+
+  switchToRemoveBtn(element = event.target) {
+    element.classList.replace("product__button", "product__button--red");
+    element.textContent = "Remove";
+  }
+
+  setNewQuantityOnFavouritesBtn() {
+    const favouritesQuantity = this.#appTag.querySelector(
+      ".button__favourites"
+    ).firstElementChild;
+    favouritesQuantity.textContent = this.getFavouriteIDsQuantity();
+  }
+
   getProductCardId(event) {
     if (event.target.classList.contains("product__tagline")) {
       return event.target.parentNode.parentNode.querySelector(
@@ -685,67 +720,11 @@ export class BeerFinder {
     }
   }
 
-  makeProductCardMarkup(prod) {
-    return `
-    <div class="card">
-      <h2 class="card__title">Product Information:</h2>
-      <div class="sproduct">
-        <img class="sproduct__image" src="${
-          prod.image_url === null ? "./bottle.png" : prod.image_url
-        } " alt="${prod.name}" width="50px"/>
-        <div class="sproduct__content">
-          <h3 class="sproduct__title">
-            ${prod.name} 
-            - 
-            <span class="sproduct__tagline">${prod.tagline}</span>
-          </h3>
-          <p class="sproduct__brewed">First brewed: ${prod.first_brewed}</p>
-          <p class="sproduct__abv">Alcohol by volume: ${prod.abv}%</p>
-          <div class="sproduct__pairing">
-            <p>Food pairing:</p> 
-            <ul>
-            ${prod.food_pairing.map((elem) => `<li>${elem}</li>`).join("")}
-            </ul>
-          </div>
-          <p class="sproduct__desc"> ${prod.description}</p>
-          ${this.makeAddOrRemoveBtn(prod.id)}
-        </div>
-      </div>
-      </div>
-    `;
-  }
-
-  onModalClose() {
-    document.querySelector(".backdrop").remove();
-  }
-
-  onModalActiveEscape(event) {
-    if (!document.querySelector(".modal")) return;
-    if (event.code !== "Escape") return;
-    document.querySelector(".backdrop").remove();
-  }
-
-  onModalActiveBackdrop(event) {
-    if (event.currentTarget !== event.target) return;
-    document.querySelector(".backdrop").remove();
-  }
-
-  onSingleProductAddRemoveBtn(event) {
-    const productID = event.target.dataset.id;
-
-    this.onAddOrRemoveToFavouritesBtn(event);
-    this.changeBtnStatus(productID);
-  }
-
-  setLastSearches(array) {
-    this.#lastSearches = [...array];
-  }
-
   changeBtnStatus(ID = event.target.dataset.id) {
     const buttonsWithID = this.#appTag.querySelectorAll(
       `button[data-id='${ID}']`
     );
-    const isIDinFavourites = this.checkProductOnFavourites(ID);
+    const isIDinFavourites = this.isFavouritesIncludesProduct(ID);
 
     if (!buttonsWithID) {
       return;
@@ -758,7 +737,49 @@ export class BeerFinder {
     );
   }
 
-  checkProductOnFavourites(ID) {
+  isFavouritesIncludesProduct(ID) {
     return this.getFavouriteIDs().includes(ID.toString());
+  }
+
+  isElemInViewport(elem, full) {
+    const box = elem.getBoundingClientRect();
+    const top = box.top;
+    const left = box.left;
+    const bottom = box.bottom;
+    const right = box.right;
+    const width = document.documentElement.clientWidth;
+    const height = document.documentElement.clientHeight;
+    let maxWidth = 0;
+    let maxHeight = 0;
+    if (full) {
+      maxWidth = right - left;
+      maxHeight = bottom - top;
+    }
+    return (
+      Math.min(height, bottom) - Math.max(0, top) >= maxHeight &&
+      Math.min(width, right) - Math.max(0, left) >= maxWidth
+    );
+  }
+
+  validationLength(length) {
+    return length >= SEARCH_VALID_LENGTH;
+  }
+
+  debounce(func, msDelay) {
+    let timeout;
+
+    return function () {
+      const fnCall = () => {
+        func.apply(this, arguments);
+      };
+
+      clearTimeout(timeout);
+
+      timeout = setTimeout(fnCall, msDelay);
+    };
+  }
+
+  scrollToElement(element) {
+    element.scrollIntoView();
   }
 }

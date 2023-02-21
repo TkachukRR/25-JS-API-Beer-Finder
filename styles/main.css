@@ -6,13 +6,19 @@
   padding: 0;
 }
 
+#beerFinder {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  height: 100vh;
+}
+
 .container {
   margin: 0 auto;
-  width: 1200px;
+  max-width: 1200px;
   background-color: rgba(255, 255, 255, 0.85);
-  min-height: 100vh;
-  position: relative;
-  border-radius: 8px;
+  padding: 15px;
 }
 
 .btn {
@@ -46,7 +52,8 @@
 }
 
 .header {
-  position: relative;
+  position: sticky;
+  top: 0;
   justify-content: space-between;
   align-items: center;
 }
@@ -55,9 +62,25 @@
 }
 .header__title {
   text-align: center;
-  margin-bottom: 15px;
   font-size: 42px;
   letter-spacing: 45px;
+  padding: 30px 0;
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.main {
+  height: 100%;
+}
+
+.footer {
+  width: 100%;
+  bottom: 0;
+}
+.footer__slogan {
+  text-align: center;
+  font-size: 32px;
+  letter-spacing: 25px;
   padding: 30px 0;
   background-color: #000000;
   color: #ffffff;
@@ -66,7 +89,7 @@
 .button__favourites {
   position: absolute;
   right: 20px;
-  top: 130px;
+  top: 15px;
 }
 
 .search {
@@ -218,14 +241,13 @@
 .navigation {
   display: flex;
   justify-content: end;
-  margin: 20px;
 }
 .navigation__top {
   position: fixed;
   min-width: auto;
   padding: 10px;
   left: 20px;
-  bottom: 20px;
+  bottom: 120px;
 }
 
 .backdrop {
