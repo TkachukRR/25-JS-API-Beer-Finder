@@ -58,7 +58,9 @@ export class BeerFinder {
     this.insertRandomProductItems(PRODUCT_PER_PAGE);
     this.addMainListeners();
 
-    document.addEventListener("scroll", debouncedSetNaviTopBtnVisibility);
+    const tagMain = this.#appTag.querySelector(".main");
+
+    tagMain.addEventListener("scroll", debouncedSetNaviTopBtnVisibility);
   }
 
   renderApp() {
@@ -219,7 +221,7 @@ export class BeerFinder {
         (prod) => `
       <li class="product__item">
         <img class="product__image" src="${
-          hasImageUrl(prod) ? "./bottle.png" : prod.image_url
+          hasImageUrl(prod) ? "./images/bottle.png" : prod.image_url
         } " alt="${prod.name}" width="50px"/>
         <div class="product__content">
           <h3 class="product__title">
@@ -262,7 +264,7 @@ export class BeerFinder {
       <h2 class="card__title">Product Information:</h2>
       <div class="sproduct">
         <img class="sproduct__image" src="${
-          prod.image_url === null ? "./bottle.png" : prod.image_url
+          prod.image_url === null ? "./images/bottle.png" : prod.image_url
         } " alt="${prod.name}" width="50px"/>
         <div class="sproduct__content">
           <h3 class="sproduct__title">
@@ -493,18 +495,18 @@ export class BeerFinder {
     this.changeBtnStatus(currentID);
     this.onRemoveBtn(event);
     event.target.parentNode.remove();
+    if (!this.getFavouriteIDsQuantity()) {
+      this.onModalClose();
+    }
   }
 
   onProductsItem(event) {
     const onAddRemoveBtnClick = event.target.hasAttribute("data-id");
+    const isClosestProductItem = event.target.closest(".product__item");
 
-    if (
-      onAddRemoveBtnClick ||
-      event.target.classList.contains("product__list") ||
-      event.target.classList.contains("navigation") ||
-      event.target.classList.contains("navigation__next")
-    )
+    if (onAddRemoveBtnClick || !isClosestProductItem) {
       return;
+    }
 
     const productID = this.getProductCardId(event);
 
@@ -547,7 +549,6 @@ export class BeerFinder {
   }
 
   onModalActiveEscape(event) {
-    if (!this.#appTag.querySelector(".modal")) return;
     if (event.code !== "Escape") return;
     document.querySelector(".backdrop").remove();
   }

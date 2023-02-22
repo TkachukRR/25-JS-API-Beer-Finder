@@ -5,6 +5,7 @@
   margin: 0;
   padding: 0;
 }
+
 #beerFinder {
   display: flex;
   flex-direction: column;
@@ -16,8 +17,10 @@
 .container {
   margin: 0 auto;
   max-width: 1200px;
-  background-color: rgba(255, 255, 255, 0.85);
+  width: 1200px;
   padding: 15px;
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.85);
 }
 
 .btn {
@@ -64,15 +67,10 @@
 }
 
 .header {
-  position: sticky;
-  top: 0;
-  // z-index: 999;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 
-  justify-content: space-between;
-  align-items: center;
-  :nth-child(2) {
-    align-self: flex-end;
-  }
   &__title {
     text-align: center;
     font-size: 42px;
@@ -81,10 +79,35 @@
     background-color: #000000;
     color: #ffffff;
   }
+
+  & .container {
+    position: relative;
+    left: -3px;
+  }
 }
 
 .main {
   height: 100%;
+  overflow-y: scroll;
+  align-self: stretch;
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0);
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.9);
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  &::-webkit-scrollbar-thumb:active {
+    background: rgba(0, 0, 0, 0.9);
+  }
 }
 
 .footer {
@@ -425,7 +448,7 @@
   }
 
   &__item {
-    min-width: 300px;
+    min-width: 400px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -438,6 +461,7 @@
 
   &__name {
     margin-right: 20px;
+    overflow: hidden;
   }
 
   &__remove {
@@ -527,14 +551,18 @@
   }
 }
 
-.product__button {
-}
-
 body {
-  background-image: url("./../bg4.jpg");
+  background-image: url("./../images/bg4.jpg");
   background-position: 50% 50%;
   background-repeat: repeat;
   background-size: 800px;
-  // background-size: cover;
   background-attachment: fixed;
+}
+
+html {
+  overflow-y: scroll;
+  &::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+  }
 }
